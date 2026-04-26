@@ -1,5 +1,5 @@
-import { r as reactExports } from "./index-CiUudlGD.js";
-import { u as useLayoutEffect2 } from "./label-lBnrv9wF.js";
+import { r as reactExports } from "./index-BIcych2j.js";
+import { u as useLayoutEffect2 } from "./label-DMZhWftV.js";
 function useSize(element) {
   const [size, setSize] = reactExports.useState(void 0);
   useLayoutEffect2(() => {

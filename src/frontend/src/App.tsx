@@ -9,8 +9,10 @@ import {
 import { Layout } from "./components/layout/Layout";
 
 // Lazy page imports
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { SkeletonGrid } from "./components/ui/SkeletonCard";
+import { useAppConfig } from "./hooks/use-admin";
+import { setActiveRpcUrl } from "./lib/solana";
 
 const PortfolioPage = lazy(() => import("./pages/PortfolioPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
@@ -28,10 +30,23 @@ function PageLoader() {
   );
 }
 
+// Syncs the admin-configured Solana RPC URL into the module-level active URL
+// so every Solana call across the app uses the correct endpoint (mainnet vs devnet).
+function RpcConfigSync() {
+  const { data: config } = useAppConfig();
+  useEffect(() => {
+    if (config?.solanaRpcUrl) {
+      setActiveRpcUrl(config.solanaRpcUrl);
+    }
+  }, [config?.solanaRpcUrl]);
+  return null;
+}
+
 // Root route with layout
 const rootRoute = createRootRoute({
   component: () => (
     <Layout>
+      <RpcConfigSync />
       <Suspense fallback={<PageLoader />}>
         <Outlet />
       </Suspense>

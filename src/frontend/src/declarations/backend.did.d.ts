@@ -217,7 +217,7 @@ export interface _SERVICE {
   'getMyRole' : ActorMethod<[], Role>,
   'getNft' : ActorMethod<[string], [] | [NftRecord]>,
   /**
-   * / Query Solana Devnet balance for a given address; returns lamports as Text.
+   * / Query Solana balance for a given address; returns lamports as Text.
    */
   'getSolanaBalance' : ActorMethod<[string], string>,
   'getUser' : ActorMethod<[string], [] | [UserProfile]>,

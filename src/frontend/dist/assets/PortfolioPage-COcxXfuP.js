@@ -1,29 +1,12 @@
-import { c as createLucideIcon, j as jsxRuntimeExports, B as Button, a as Badge, b as cn, l as lamportsToSol, u as usePhantom, d as useNavigate, e as Briefcase, L as LayoutGrid, S as Skeleton, f as SkeletonGrid } from "./index-CiUudlGD.js";
-import { A as AddressChip } from "./AddressChip-BI-1VyDm.js";
-import { E as EmptyState } from "./EmptyState-C11XHvsd.js";
-import { T as Tag } from "./tag-DnmU2gsS.js";
-import { S as SolAmount } from "./SolAmount-DnuIZtyd.js";
-import { u as useQuery, c as createActor, E as ExternalBlob } from "./backend-DPmPedGg.js";
-import { W as Wallet } from "./wallet-BOTygLnx.js";
-import { T as TrendingUp } from "./trending-up-HnLbIlNS.js";
-import "./check-BQkykO4m.js";
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$3 = [
-  [
-    "path",
-    {
-      d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
-      key: "1nclc0"
-    }
-  ],
-  ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
-];
-const Eye = createLucideIcon("eye", __iconNode$3);
+import { c as createLucideIcon, j as jsxRuntimeExports, B as Button, a as Badge, b as cn, u as useQuery, l as lamportsToSol, d as createActor, E as ExternalBlob, e as usePhantom, f as useNavigate, g as useAppConfig, r as reactExports, s as setActiveRpcUrl, h as Briefcase, L as LayoutGrid, S as Skeleton, i as SkeletonGrid } from "./index-BIcych2j.js";
+import { A as AddressChip } from "./AddressChip-BHgiOfyQ.js";
+import { E as EmptyState } from "./EmptyState-DklMelPP.js";
+import { T as Tag } from "./tag-BI5JadGw.js";
+import { S as SolAmount } from "./SolAmount-C3sUAlqD.js";
+import { W as Wallet } from "./wallet-DRZPAFJa.js";
+import { T as TrendingUp } from "./trending-up-rRlhqaJq.js";
+import { S as Sparkles } from "./sparkles-ChOZ1iu1.js";
+import "./check-szlSdK33.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -34,12 +17,13 @@ const __iconNode$2 = [
   [
     "path",
     {
-      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
-      key: "usdka0"
+      d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
+      key: "1nclc0"
     }
-  ]
+  ],
+  ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-const FolderOpen = createLucideIcon("folder-open", __iconNode$2);
+const Eye = createLucideIcon("eye", __iconNode$2);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -47,11 +31,15 @@ const FolderOpen = createLucideIcon("folder-open", __iconNode$2);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1 = [
-  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
-  ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
-  ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
+  [
+    "path",
+    {
+      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
+      key: "usdka0"
+    }
+  ]
 ];
-const Image = createLucideIcon("image", __iconNode$1);
+const FolderOpen = createLucideIcon("folder-open", __iconNode$1);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -59,19 +47,11 @@ const Image = createLucideIcon("image", __iconNode$1);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode = [
-  [
-    "path",
-    {
-      d: "M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z",
-      key: "4pj2yx"
-    }
-  ],
-  ["path", { d: "M20 3v4", key: "1olli1" }],
-  ["path", { d: "M22 5h-4", key: "1gvqau" }],
-  ["path", { d: "M4 17v2", key: "vumght" }],
-  ["path", { d: "M5 18H3", key: "zchphs" }]
+  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
+  ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
+  ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
 ];
-const Sparkles = createLucideIcon("sparkles", __iconNode);
+const Image = createLucideIcon("image", __iconNode);
 const STATUS_STYLES = {
   listed: "bg-accent/10 text-accent border-accent/20",
   auction: "bg-primary/10 text-primary border-primary/20",
@@ -332,12 +312,19 @@ function ConnectPrompt({ onConnect }) {
 function PortfolioPage() {
   const { isConnected, address, connect, role } = usePhantom();
   const navigate = useNavigate();
+  const { data: appConfig } = useAppConfig();
+  const escrowAddress = (appConfig == null ? void 0 : appConfig.escrowWalletAddress) ?? null;
+  reactExports.useEffect(() => {
+    if (appConfig == null ? void 0 : appConfig.solanaRpcUrl) {
+      setActiveRpcUrl(appConfig.solanaRpcUrl);
+    }
+  }, [appConfig == null ? void 0 : appConfig.solanaRpcUrl]);
   const {
     data: nfts = [],
     isLoading: nftsLoading,
     error: nftsError
   } = useUserNfts(address);
-  const { data: solBalance = 0, isLoading: balanceLoading } = useSolanaBalance(address);
+  const { data: solBalance = 0, isLoading: balanceLoading } = useSolanaBalance(escrowAddress);
   const { data: collections = [], isLoading: collectionsLoading } = useUserCollections(address);
   if (!isConnected) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(ConnectPrompt, { onConnect: connect });
@@ -354,6 +341,7 @@ function PortfolioPage() {
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-2xl font-display font-bold text-foreground", children: "My Portfolio" }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 mt-1", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-muted-foreground", children: "Your wallet:" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             AddressChip,
             {
@@ -416,9 +404,9 @@ function PortfolioPage() {
         StatCard,
         {
           icon: Wallet,
-          label: "SOL Balance",
+          label: "App Vault Balance (SOL)",
           ocid: "portfolio.balance_card",
-          children: balanceLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-28" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(SolAmount, { sol: solBalance, size: "xl" })
+          children: balanceLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-28" }) : !escrowAddress ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-muted-foreground italic", children: "Not configured" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(SolAmount, { sol: solBalance, size: "xl" })
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(

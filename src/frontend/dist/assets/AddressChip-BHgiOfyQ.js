@@ -1,5 +1,5 @@
-import { r as reactExports, j as jsxRuntimeExports, t as truncateAddress, a4 as Copy, b as cn, o as ue } from "./index-CiUudlGD.js";
-import { C as Check } from "./check-BQkykO4m.js";
+import { r as reactExports, j as jsxRuntimeExports, x as truncateAddress, a6 as Copy, b as cn, D as ue } from "./index-BIcych2j.js";
+import { C as Check } from "./check-szlSdK33.js";
 function AddressChip({
   address,
   full = false,

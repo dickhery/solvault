@@ -260,7 +260,7 @@ service : {
   getListings: (filter: opt ListingFilter) -> (vec Listing) query;
   getMyRole: () -> (Role) query;
   getNft: (mintAddress: text) -> (opt NftRecord) query;
-  /// Query Solana Devnet balance for a given address; returns lamports as Text.
+  /// Query Solana balance for a given address; returns lamports as Text.
   getSolanaBalance: (address: text) -> (text);
   getUser: (solanaAddress: text) -> (opt UserProfile) query;
   getUserCollections: (ownerAddress: text) -> (vec UserCollection) query;

@@ -7,11 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePhantom } from "@/contexts/phantom-context";
+import { useAppConfig } from "@/hooks/use-admin";
 import {
   useSolanaBalance,
   useUserCollections,
   useUserNfts,
 } from "@/hooks/use-nfts";
+import { setActiveRpcUrl } from "@/lib/solana";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Briefcase,
@@ -22,6 +24,7 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { useEffect } from "react";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -128,14 +131,26 @@ export default function PortfolioPage() {
   const { isConnected, address, connect, role } = usePhantom();
   const navigate = useNavigate();
 
+  // Load app config to get the escrow wallet address and apply admin-configured RPC URL
+  const { data: appConfig } = useAppConfig();
+  const escrowAddress = appConfig?.escrowWalletAddress ?? null;
+
+  // Apply admin-configured RPC URL whenever config loads
+  useEffect(() => {
+    if (appConfig?.solanaRpcUrl) {
+      setActiveRpcUrl(appConfig.solanaRpcUrl);
+    }
+  }, [appConfig?.solanaRpcUrl]);
+
   const {
     data: nfts = [],
     isLoading: nftsLoading,
     error: nftsError,
   } = useUserNfts(address);
 
+  // Balance reflects the escrow wallet (the address users send SOL to), not the Phantom wallet
   const { data: solBalance = 0, isLoading: balanceLoading } =
-    useSolanaBalance(address);
+    useSolanaBalance(escrowAddress);
 
   const { data: collections = [], isLoading: collectionsLoading } =
     useUserCollections(address);
@@ -162,6 +177,7 @@ export default function PortfolioPage() {
             My Portfolio
           </h1>
           <div className="flex items-center gap-2 mt-1">
+            <span className="text-xs text-muted-foreground">Your wallet:</span>
             <AddressChip
               address={address!}
               data-ocid="portfolio.address_chip"
@@ -211,11 +227,15 @@ export default function PortfolioPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={Wallet}
-          label="SOL Balance"
+          label="App Vault Balance (SOL)"
           ocid="portfolio.balance_card"
         >
           {balanceLoading ? (
             <Skeleton className="h-8 w-28" />
+          ) : !escrowAddress ? (
+            <span className="text-sm text-muted-foreground italic">
+              Not configured
+            </span>
           ) : (
             <SolAmount sol={solBalance} size="xl" />
           )}

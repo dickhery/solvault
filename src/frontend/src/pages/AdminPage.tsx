@@ -34,6 +34,10 @@ import {
 import { truncateAddress } from "@/lib/solana";
 import { Link } from "@tanstack/react-router";
 import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Circle,
   ImageOff,
   Layers,
   LayoutDashboard,
@@ -44,9 +48,12 @@ import {
   Save,
   Settings,
   ShieldAlert,
+  Sparkles,
   Trash2,
+  Wallet,
+  X,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
 // ─── Access Denied ────────────────────────────────────────────────────────────
@@ -72,6 +79,237 @@ function AccessDenied() {
         <Link to="/">← Back to Portfolio</Link>
       </Button>
     </div>
+  );
+}
+
+// ─── Admin Setup Guide ────────────────────────────────────────────────────────
+
+const DISMISSED_KEY = "solvault_setup_guide_dismissed";
+
+interface SetupStep {
+  number: number;
+  title: string;
+  description: string;
+  detail: string;
+  isComplete: boolean;
+}
+
+function StepIndicator({ isComplete }: { isComplete: boolean }) {
+  return isComplete ? (
+    <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+  ) : (
+    <Circle className="w-5 h-5 text-muted-foreground/40 flex-shrink-0" />
+  );
+}
+
+function AdminSetupGuide() {
+  const { data: config } = useAppConfig();
+  const { data: collections } = useCollections();
+
+  const isDismissed = localStorage.getItem(DISMISSED_KEY) === "true";
+  const [visible, setVisible] = useState(!isDismissed);
+  const [expanded, setExpanded] = useState(!isDismissed);
+
+  function dismiss() {
+    localStorage.setItem(DISMISSED_KEY, "true");
+    setVisible(false);
+  }
+
+  function toggleExpanded() {
+    setExpanded((prev) => !prev);
+  }
+
+  const hasEscrow = Boolean(config?.escrowWalletAddress?.trim());
+  const isMainnet = config?.network === "mainnet-beta";
+  const hasCollections = (collections?.length ?? 0) > 0;
+  const hasFees =
+    (config?.platformFeePercent ?? 0) > 0 ||
+    (config?.collectionCreationFeeSOL ?? 0) > 0;
+
+  const steps: SetupStep[] = [
+    {
+      number: 1,
+      title: "Connect Phantom Wallet",
+      description:
+        "You're already here — the first authenticated user is admin.",
+      detail:
+        "Your Phantom wallet is now linked as the platform admin. Only you can access this dashboard and configure the app.",
+      isComplete: true,
+    },
+    {
+      number: 2,
+      title: "Configure Escrow Wallet",
+      description: "Set the Solana address users will send their NFTs to.",
+      detail:
+        "This must be a Solana wallet you fully control (e.g. a Phantom wallet you own). Users will deposit NFTs to this address when listing them on the marketplace. Enter it in App Configuration → Escrow Wallet Address below.",
+      isComplete: hasEscrow,
+    },
+    {
+      number: 3,
+      title: "Set Mainnet RPC URL",
+      description: "Switch from devnet to a mainnet-beta RPC endpoint.",
+      detail:
+        'Use the public mainnet RPC (https://api.mainnet-beta.solana.com) or a premium provider like Helius, QuickNode, or Alchemy for better reliability. Set Network to "Mainnet Beta" and update the RPC URL in App Configuration below.',
+      isComplete: isMainnet,
+    },
+    {
+      number: 4,
+      title: "Register NFT Collections",
+      description: "Add the collections users can deposit and trade.",
+      detail:
+        'For each collection you need: the collection name, verified creator/collection address (mint address), and the metadata program address (usually the Metaplex Token Metadata program: metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s). Use the "Add Collection" button in the Registered Collections section below.',
+      isComplete: hasCollections,
+    },
+    {
+      number: 5,
+      title: "Set Platform Fees",
+      description: "Configure the platform fee % and collection creation fee.",
+      detail:
+        "Platform fee is taken from each marketplace sale (e.g. 2.5%). Collection creation fee is charged in SOL when users create their own NFT collections. Set these in App Configuration → Collection Creation Fee and Platform Fee below.",
+      isComplete: hasFees,
+    },
+    {
+      number: 6,
+      title: "Verify with NFT Lookup Tool",
+      description: "Test that your registered collections are working.",
+      detail:
+        "Go to Settings and use the NFT Lookup tool. Paste a known NFT mint address from one of your registered collections — the app should confirm it belongs to a supported collection. This verifies your setup is complete.",
+      isComplete: hasCollections && isMainnet && hasEscrow,
+    },
+  ];
+
+  const completedCount = steps.filter((s) => s.isComplete).length;
+  const allComplete = completedCount === steps.length;
+
+  if (!visible) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.25 }}
+        className="rounded-2xl border border-primary/25 bg-primary/5 overflow-hidden"
+        data-ocid="admin.setup_guide.panel"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15">
+          <button
+            type="button"
+            onClick={toggleExpanded}
+            className="flex items-center gap-3 flex-1 min-w-0 text-left group"
+            data-ocid="admin.setup_guide.toggle"
+            aria-expanded={expanded}
+          >
+            <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4.5 h-4.5 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="font-display font-semibold text-foreground text-sm">
+                  Admin Setup Guide
+                </span>
+                <Badge
+                  variant="secondary"
+                  className={`text-xs font-mono ${allComplete ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/25" : "bg-primary/10 text-primary border-primary/20"}`}
+                >
+                  {completedCount}/{steps.length} complete
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                {allComplete
+                  ? "All steps complete — your app is ready for real use!"
+                  : "Follow these steps to configure SolVault for real use"}
+              </p>
+            </div>
+            <div className="flex-shrink-0 text-muted-foreground group-hover:text-foreground transition-colors">
+              {expanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={dismiss}
+            className="ml-3 flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            aria-label="Dismiss setup guide"
+            data-ocid="admin.setup_guide.dismiss_button"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Steps */}
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.div
+              key="setup-steps"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                {steps.map((step, i) => (
+                  <motion.div
+                    key={step.number}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className={`rounded-xl border p-4 flex gap-3.5 transition-colors ${
+                      step.isComplete
+                        ? "bg-emerald-500/5 border-emerald-500/20"
+                        : "bg-card/60 border-border/60"
+                    }`}
+                    data-ocid={`admin.setup_guide.step.${step.number}`}
+                  >
+                    <div className="flex flex-col items-center gap-1.5 pt-0.5">
+                      <StepIndicator isComplete={step.isComplete} />
+                      <span className="text-[10px] font-mono text-muted-foreground/50 font-semibold">
+                        {step.number.toString().padStart(2, "0")}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-sm font-semibold mb-1 ${step.isComplete ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"}`}
+                      >
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {step.detail}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Footer note */}
+              <div className="px-5 pb-4">
+                <div className="rounded-lg bg-muted/40 border border-border/50 px-4 py-3 flex items-start gap-2.5">
+                  <Wallet className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-foreground">
+                      Address clarity tip:
+                    </span>{" "}
+                    Users see two addresses in their Settings — their own
+                    Phantom wallet address (where they receive outgoing
+                    transfers), and the <strong>app's escrow address</strong>{" "}
+                    (where they send NFTs to deposit them). Make sure your
+                    escrow wallet is always funded with a small amount of SOL to
+                    cover transaction fees.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -421,6 +659,10 @@ function ConfigSection() {
                 className="font-mono text-sm"
                 data-ocid="admin.config.escrow_wallet.input"
               />
+              <p className="text-xs text-muted-foreground">
+                This is the address users will send NFTs to when depositing.
+                Must be a Solana wallet you control.
+              </p>
             </div>
 
             {/* RPC URL */}
@@ -428,11 +670,15 @@ function ConfigSection() {
               <Label htmlFor="cfg-rpc">Solana RPC URL</Label>
               <Input
                 id="cfg-rpc"
-                placeholder="https://api.devnet.solana.com"
+                placeholder="https://api.mainnet-beta.solana.com"
                 value={current?.solanaRpcUrl ?? ""}
                 onChange={(e) => setField("solanaRpcUrl", e.target.value)}
                 data-ocid="admin.config.rpc_url.input"
               />
+              <p className="text-xs text-muted-foreground">
+                Use mainnet for production. Premium providers (Helius,
+                QuickNode, Alchemy) offer better rate limits.
+              </p>
             </div>
 
             {/* Network */}
@@ -560,6 +806,9 @@ export default function AdminPage() {
           </p>
         </div>
       </motion.div>
+
+      {/* Setup Guide — shown until dismissed */}
+      <AdminSetupGuide />
 
       {/* Stats Overview */}
       <StatsBar />

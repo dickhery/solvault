@@ -62,7 +62,7 @@ module {
   public func completeSale(
     listings : Map.Map<Text, Listing>,
     listingId : Text,
-    buyerAddress : Text,
+    _buyerAddress : Text,
     txSignature : Text,
   ) : Result<()> {
     if (txSignature.size() == 0) {
@@ -184,7 +184,7 @@ module {
   public func settleAuction(
     auctions : Map.Map<Text, Auction>,
     auctionId : Text,
-    winnerAddress : Text,
+    _winnerAddress : Text,
     paymentTxSignature : Text,
   ) : Result<()> {
     if (paymentTxSignature.size() == 0) {

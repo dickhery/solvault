@@ -1,4 +1,5 @@
 import Map "mo:core/Map";
+import Text "mo:core/Text";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import MixinObjectStorage "mo:caffeineai-object-storage/Mixin";
@@ -83,11 +84,32 @@ actor {
 
   // ── Solana RPC HTTP Outcalls ──────────────────────────────────
 
-  /// Query Solana Devnet balance for a given address; returns lamports as Text.
+  /// Extract the lamports value from a Solana RPC getBalance JSON response.
+  /// Expected format: {"jsonrpc":"2.0","result":{"context":{"slot":N},"value":LAMPORTS},"id":1}
+  func parseLamports(json : Text) : Text {
+    // Split on `"value":` — take the part after the first occurrence
+    let parts = json.split(#text "\"value\":").toArray();
+    if (parts.size() < 2) return "0";
+    let after = parts[1];
+    // Collect consecutive digit characters from the start of `after`
+    var digits = "";
+    for (ch in after.chars()) {
+      if (ch >= '0' and ch <= '9') {
+        digits := digits # Text.fromChar(ch);
+      } else if (digits != "") {
+        // Stop at first non-digit after collecting digits
+        return digits;
+      };
+    };
+    if (digits == "") "0" else digits;
+  };
+
+  /// Query Solana balance for a given address; returns lamports as Text.
   public func getSolanaBalance(address : Text) : async Text {
     let rpcUrl = appConfig.value.solanaRpcUrl;
     let body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"" # address # "\"]}";
-    await OutCall.httpPostRequest(rpcUrl, [], body, transform);
+    let raw = await OutCall.httpPostRequest(rpcUrl, [], body, transform);
+    parseLamports(raw);
   };
 
   /// Verify a Solana transaction is finalized; returns raw JSON response as Text.

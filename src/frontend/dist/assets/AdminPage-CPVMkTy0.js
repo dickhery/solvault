@@ -1,12 +1,22 @@
-import { c as createLucideIcon, g as useQueryClient, o as ue, r as reactExports, j as jsxRuntimeExports, b as cn, B as Button, n as LoaderCircle, q as useComposedRefs, v as buttonVariants, u as usePhantom, a as Badge, w as Link, p as Layers, S as Skeleton, x as Settings, t as truncateAddress } from "./index-CiUudlGD.js";
-import { u as useQuery, c as createActor, E as ExternalBlob } from "./backend-DPmPedGg.js";
-import { u as useMutation, M as Modal, I as Input, R as Root, T as Trigger, W as WarningProvider, C as Content, a as Title, D as Description, b as Close, c as createDialogScope, d as Portal, O as Overlay, P as Plus } from "./input-BQWC2nO7.js";
-import { L as Label, c as composeEventHandlers, a as createSlottable, b as createContextScope } from "./label-lBnrv9wF.js";
-import { I as ImagePlus, T as Textarea } from "./textarea-CJYmNdZX.js";
-import { E as EmptyState } from "./EmptyState-C11XHvsd.js";
-import { S as Select, a as SelectTrigger, b as SelectValue, c as SelectContent, d as SelectItem } from "./select-CCBpkAaS.js";
-import "./index-DI1tdK2w.js";
-import "./check-BQkykO4m.js";
+import { c as createLucideIcon, r as reactExports, I as useRegisterCollection, J as useUpdateCollection, j as jsxRuntimeExports, b as cn, B as Button, z as LoaderCircle, E as ExternalBlob, K as useComposedRefs$1, M as buttonVariants, e as usePhantom, a as Badge, N as Link, g as useAppConfig, O as useCollections, P as ChevronDown, X, H as Layers, S as Skeleton, Q as useUpdateConfig, R as Settings, T as useDeleteCollection, x as truncateAddress } from "./index-BIcych2j.js";
+import { M as Modal, R as Root, T as Trigger, W as WarningProvider, C as Content, a as Title, D as Description, b as Close, c as createDialogScope, d as Portal, O as Overlay, P as Plus } from "./Modal-CuQJCFdV.js";
+import { L as Label, I as Input, c as composeEventHandlers, a as createSlottable, b as createContextScope } from "./label-DMZhWftV.js";
+import { I as ImagePlus, T as Textarea } from "./textarea-UKJ1GFTI.js";
+import { E as EmptyState } from "./EmptyState-DklMelPP.js";
+import { C as ChevronUp, S as Select, a as SelectTrigger, b as SelectValue, c as SelectContent, d as SelectItem } from "./select-Bl2PEyxp.js";
+import { S as Sparkles } from "./sparkles-ChOZ1iu1.js";
+import { W as Wallet } from "./wallet-DRZPAFJa.js";
+import { C as CircleCheck } from "./circle-check-CKy8H2B1.js";
+import "./index-DDX5oEI0.js";
+import "./check-szlSdK33.js";
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$7 = [["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]];
+const Circle = createLucideIcon("circle", __iconNode$7);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -122,119 +132,6 @@ const __iconNode = [
   ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
 ];
 const Trash2 = createLucideIcon("trash-2", __iconNode);
-var define_process_env_default = {};
-function getActor() {
-  const canisterId = typeof process !== "undefined" && define_process_env_default.CANISTER_ID_BACKEND || "";
-  if (!canisterId) return null;
-  const storageGatewayUrl = typeof process !== "undefined" && "https://blob.caffeine.ai" || "https://blob.caffeine.ai";
-  const uploadFile = async (blob) => {
-    const bytes = await blob.getBytes();
-    const res = await fetch(`${storageGatewayUrl}/upload`, {
-      method: "POST",
-      body: bytes
-    });
-    if (!res.ok) throw new Error("Upload failed");
-    return new Uint8Array(await res.arrayBuffer());
-  };
-  const downloadFile = async (hash) => {
-    const hexHash = Array.from(hash).map((b) => b.toString(16).padStart(2, "0")).join("");
-    return ExternalBlob.fromURL(`${storageGatewayUrl}/blob/${hexHash}`);
-  };
-  return createActor(canisterId, uploadFile, downloadFile);
-}
-function useCollections() {
-  return useQuery({
-    queryKey: ["collections"],
-    queryFn: async () => {
-      const actor = getActor();
-      if (!actor) return [];
-      return actor.getCollections();
-    },
-    staleTime: 3e4
-  });
-}
-function useRegisterCollection() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (data) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
-      return actor.registerCollection(data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
-      ue.success("Collection registered successfully");
-    },
-    onError: (err) => {
-      ue.error(err.message ?? "Failed to register collection");
-    }
-  });
-}
-function useUpdateCollection() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id: id2, data }) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
-      const result = await actor.updateCollection(id2, data);
-      if (result.__kind__ === "err") throw new Error(result.err);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
-      ue.success("Collection updated successfully");
-    },
-    onError: (err) => {
-      ue.error(err.message ?? "Failed to update collection");
-    }
-  });
-}
-function useDeleteCollection() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id2) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
-      const result = await actor.deleteCollection(id2);
-      if (result.__kind__ === "err") throw new Error(result.err);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
-      ue.success("Collection deleted");
-    },
-    onError: (err) => {
-      ue.error(err.message ?? "Failed to delete collection");
-    }
-  });
-}
-function useAppConfig() {
-  return useQuery({
-    queryKey: ["appConfig"],
-    queryFn: async () => {
-      const actor = getActor();
-      if (!actor) return null;
-      return actor.getConfig();
-    },
-    staleTime: 6e4
-  });
-}
-function useUpdateConfig() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (config) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
-      const result = await actor.updateConfig(config);
-      if (result.__kind__ === "err") throw new Error(result.err);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appConfig"] });
-      ue.success("Configuration saved");
-    },
-    onError: (err) => {
-      ue.error(err.message ?? "Failed to save configuration");
-    }
-  });
-}
 const INITIAL_FORM = {
   name: "",
   description: "",
@@ -529,7 +426,7 @@ var AlertDialogContent$1 = reactExports.forwardRef(
     const { __scopeAlertDialog, children, ...contentProps } = props;
     const dialogScope = useDialogScope(__scopeAlertDialog);
     const contentRef = reactExports.useRef(null);
-    const composedRefs = useComposedRefs(forwardedRef, contentRef);
+    const composedRefs = useComposedRefs$1(forwardedRef, contentRef);
     const cancelRef = reactExports.useRef(null);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       WarningProvider,
@@ -593,7 +490,7 @@ var AlertDialogCancel$1 = reactExports.forwardRef(
     const { __scopeAlertDialog, ...cancelProps } = props;
     const { cancelRef } = useAlertDialogContentContext(CANCEL_NAME, __scopeAlertDialog);
     const dialogScope = useDialogScope(__scopeAlertDialog);
-    const ref = useComposedRefs(forwardedRef, cancelRef);
+    const ref = useComposedRefs$1(forwardedRef, cancelRef);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Close, { ...dialogScope, ...cancelProps, ref });
   }
 );
@@ -1029,16 +926,16 @@ function createRenderBatcher(scheduleNextBatch, allowKeepAlive) {
   };
   const schedule = stepsOrder.reduce((acc, key) => {
     const step = steps[key];
-    acc[key] = (process2, keepAlive = false, immediate = false) => {
+    acc[key] = (process, keepAlive = false, immediate = false) => {
       if (!runNextFrame)
         wake();
-      return step.schedule(process2, keepAlive, immediate);
+      return step.schedule(process, keepAlive, immediate);
     };
     return acc;
   }, {});
-  const cancel = (process2) => {
+  const cancel = (process) => {
     for (let i = 0; i < stepsOrder.length; i++) {
-      steps[stepsOrder[i]].cancel(process2);
+      steps[stepsOrder[i]].cancel(process);
     }
   };
   return { schedule, cancel, state, steps };
@@ -6863,6 +6760,155 @@ const MotionConfigContext = reactExports.createContext({
   isStatic: false,
   reducedMotion: "never"
 });
+function setRef(ref, value) {
+  if (typeof ref === "function") {
+    return ref(value);
+  } else if (ref !== null && ref !== void 0) {
+    ref.current = value;
+  }
+}
+function composeRefs(...refs) {
+  return (node) => {
+    let hasCleanup = false;
+    const cleanups = refs.map((ref) => {
+      const cleanup = setRef(ref, node);
+      if (!hasCleanup && typeof cleanup === "function") {
+        hasCleanup = true;
+      }
+      return cleanup;
+    });
+    if (hasCleanup) {
+      return () => {
+        for (let i = 0; i < cleanups.length; i++) {
+          const cleanup = cleanups[i];
+          if (typeof cleanup === "function") {
+            cleanup();
+          } else {
+            setRef(refs[i], null);
+          }
+        }
+      };
+    }
+  };
+}
+function useComposedRefs(...refs) {
+  return reactExports.useCallback(composeRefs(...refs), refs);
+}
+class PopChildMeasure extends reactExports.Component {
+  getSnapshotBeforeUpdate(prevProps) {
+    const element = this.props.childRef.current;
+    if (isHTMLElement(element) && prevProps.isPresent && !this.props.isPresent && this.props.pop !== false) {
+      const parent = element.offsetParent;
+      const parentWidth = isHTMLElement(parent) ? parent.offsetWidth || 0 : 0;
+      const parentHeight = isHTMLElement(parent) ? parent.offsetHeight || 0 : 0;
+      const computedStyle = getComputedStyle(element);
+      const size = this.props.sizeRef.current;
+      size.height = parseFloat(computedStyle.height);
+      size.width = parseFloat(computedStyle.width);
+      size.top = element.offsetTop;
+      size.left = element.offsetLeft;
+      size.right = parentWidth - size.width - size.left;
+      size.bottom = parentHeight - size.height - size.top;
+    }
+    return null;
+  }
+  /**
+   * Required with getSnapshotBeforeUpdate to stop React complaining.
+   */
+  componentDidUpdate() {
+  }
+  render() {
+    return this.props.children;
+  }
+}
+function PopChild({ children, isPresent, anchorX, anchorY, root, pop }) {
+  var _a;
+  const id2 = reactExports.useId();
+  const ref = reactExports.useRef(null);
+  const size = reactExports.useRef({
+    width: 0,
+    height: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0
+  });
+  const { nonce } = reactExports.useContext(MotionConfigContext);
+  const childRef = ((_a = children.props) == null ? void 0 : _a.ref) ?? (children == null ? void 0 : children.ref);
+  const composedRef = useComposedRefs(ref, childRef);
+  reactExports.useInsertionEffect(() => {
+    const { width, height, top, left, right, bottom } = size.current;
+    if (isPresent || pop === false || !ref.current || !width || !height)
+      return;
+    const x = anchorX === "left" ? `left: ${left}` : `right: ${right}`;
+    const y = anchorY === "bottom" ? `bottom: ${bottom}` : `top: ${top}`;
+    ref.current.dataset.motionPopId = id2;
+    const style = document.createElement("style");
+    if (nonce)
+      style.nonce = nonce;
+    const parent = root ?? document.head;
+    parent.appendChild(style);
+    if (style.sheet) {
+      style.sheet.insertRule(`
+          [data-motion-pop-id="${id2}"] {
+            position: absolute !important;
+            width: ${width}px !important;
+            height: ${height}px !important;
+            ${x}px !important;
+            ${y}px !important;
+          }
+        `);
+    }
+    return () => {
+      var _a2;
+      (_a2 = ref.current) == null ? void 0 : _a2.removeAttribute("data-motion-pop-id");
+      if (parent.contains(style)) {
+        parent.removeChild(style);
+      }
+    };
+  }, [isPresent]);
+  return jsxRuntimeExports.jsx(PopChildMeasure, { isPresent, childRef: ref, sizeRef: size, pop, children: pop === false ? children : reactExports.cloneElement(children, { ref: composedRef }) });
+}
+const PresenceChild = ({ children, initial, isPresent, onExitComplete, custom, presenceAffectsLayout, mode, anchorX, anchorY, root }) => {
+  const presenceChildren = useConstant(newChildrenMap);
+  const id2 = reactExports.useId();
+  let isReusedContext = true;
+  let context = reactExports.useMemo(() => {
+    isReusedContext = false;
+    return {
+      id: id2,
+      initial,
+      isPresent,
+      custom,
+      onExitComplete: (childId) => {
+        presenceChildren.set(childId, true);
+        for (const isComplete of presenceChildren.values()) {
+          if (!isComplete)
+            return;
+        }
+        onExitComplete && onExitComplete();
+      },
+      register: (childId) => {
+        presenceChildren.set(childId, false);
+        return () => presenceChildren.delete(childId);
+      }
+    };
+  }, [isPresent, presenceChildren, onExitComplete]);
+  if (presenceAffectsLayout && isReusedContext) {
+    context = { ...context };
+  }
+  reactExports.useMemo(() => {
+    presenceChildren.forEach((_, key) => presenceChildren.set(key, false));
+  }, [isPresent]);
+  reactExports.useEffect(() => {
+    !isPresent && !presenceChildren.size && onExitComplete && onExitComplete();
+  }, [isPresent]);
+  children = jsxRuntimeExports.jsx(PopChild, { pop: mode === "popLayout", isPresent, anchorX, anchorY, root, children });
+  return jsxRuntimeExports.jsx(PresenceContext.Provider, { value: context, children });
+};
+function newChildrenMap() {
+  return /* @__PURE__ */ new Map();
+}
 function usePresence(subscribe = true) {
   const context = reactExports.useContext(PresenceContext);
   if (context === null)
@@ -6877,6 +6923,87 @@ function usePresence(subscribe = true) {
   const safeToRemove = reactExports.useCallback(() => subscribe && onExitComplete && onExitComplete(id2), [id2, onExitComplete, subscribe]);
   return !isPresent && onExitComplete ? [false, safeToRemove] : [true];
 }
+const getChildKey = (child) => child.key || "";
+function onlyElements(children) {
+  const filtered = [];
+  reactExports.Children.forEach(children, (child) => {
+    if (reactExports.isValidElement(child))
+      filtered.push(child);
+  });
+  return filtered;
+}
+const AnimatePresence = ({ children, custom, initial = true, onExitComplete, presenceAffectsLayout = true, mode = "sync", propagate = false, anchorX = "left", anchorY = "top", root }) => {
+  const [isParentPresent, safeToRemove] = usePresence(propagate);
+  const presentChildren = reactExports.useMemo(() => onlyElements(children), [children]);
+  const presentKeys = propagate && !isParentPresent ? [] : presentChildren.map(getChildKey);
+  const isInitialRender = reactExports.useRef(true);
+  const pendingPresentChildren = reactExports.useRef(presentChildren);
+  const exitComplete = useConstant(() => /* @__PURE__ */ new Map());
+  const exitingComponents = reactExports.useRef(/* @__PURE__ */ new Set());
+  const [diffedChildren, setDiffedChildren] = reactExports.useState(presentChildren);
+  const [renderedChildren, setRenderedChildren] = reactExports.useState(presentChildren);
+  useIsomorphicLayoutEffect(() => {
+    isInitialRender.current = false;
+    pendingPresentChildren.current = presentChildren;
+    for (let i = 0; i < renderedChildren.length; i++) {
+      const key = getChildKey(renderedChildren[i]);
+      if (!presentKeys.includes(key)) {
+        if (exitComplete.get(key) !== true) {
+          exitComplete.set(key, false);
+        }
+      } else {
+        exitComplete.delete(key);
+        exitingComponents.current.delete(key);
+      }
+    }
+  }, [renderedChildren, presentKeys.length, presentKeys.join("-")]);
+  const exitingChildren = [];
+  if (presentChildren !== diffedChildren) {
+    let nextChildren = [...presentChildren];
+    for (let i = 0; i < renderedChildren.length; i++) {
+      const child = renderedChildren[i];
+      const key = getChildKey(child);
+      if (!presentKeys.includes(key)) {
+        nextChildren.splice(i, 0, child);
+        exitingChildren.push(child);
+      }
+    }
+    if (mode === "wait" && exitingChildren.length) {
+      nextChildren = exitingChildren;
+    }
+    setRenderedChildren(onlyElements(nextChildren));
+    setDiffedChildren(presentChildren);
+    return null;
+  }
+  const { forceRender } = reactExports.useContext(LayoutGroupContext);
+  return jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: renderedChildren.map((child) => {
+    const key = getChildKey(child);
+    const isPresent = propagate && !isParentPresent ? false : presentChildren === renderedChildren || presentKeys.includes(key);
+    const onExit = () => {
+      if (exitingComponents.current.has(key)) {
+        return;
+      }
+      if (exitComplete.has(key)) {
+        exitingComponents.current.add(key);
+        exitComplete.set(key, true);
+      } else {
+        return;
+      }
+      let isEveryExitComplete = true;
+      exitComplete.forEach((isExitComplete) => {
+        if (!isExitComplete)
+          isEveryExitComplete = false;
+      });
+      if (isEveryExitComplete) {
+        forceRender == null ? void 0 : forceRender();
+        setRenderedChildren(pendingPresentChildren.current);
+        propagate && (safeToRemove == null ? void 0 : safeToRemove());
+        onExitComplete && onExitComplete();
+      }
+    };
+    return jsxRuntimeExports.jsx(PresenceChild, { isPresent, initial: !isInitialRender.current || initial ? void 0 : false, custom, presenceAffectsLayout, mode, root, onExitComplete: isPresent ? void 0 : onExit, anchorX, anchorY, children: child }, key);
+  }) });
+};
 const LazyContext = reactExports.createContext({ strict: false });
 const featureProps = {
   animation: [
@@ -8609,6 +8736,186 @@ function AccessDenied() {
     }
   );
 }
+const DISMISSED_KEY = "solvault_setup_guide_dismissed";
+function StepIndicator({ isComplete }) {
+  return isComplete ? /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-5 h-5 text-emerald-500 flex-shrink-0" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Circle, { className: "w-5 h-5 text-muted-foreground/40 flex-shrink-0" });
+}
+function AdminSetupGuide() {
+  var _a;
+  const { data: config } = useAppConfig();
+  const { data: collections } = useCollections();
+  const isDismissed = localStorage.getItem(DISMISSED_KEY) === "true";
+  const [visible, setVisible] = reactExports.useState(!isDismissed);
+  const [expanded, setExpanded] = reactExports.useState(!isDismissed);
+  function dismiss() {
+    localStorage.setItem(DISMISSED_KEY, "true");
+    setVisible(false);
+  }
+  function toggleExpanded() {
+    setExpanded((prev) => !prev);
+  }
+  const hasEscrow = Boolean((_a = config == null ? void 0 : config.escrowWalletAddress) == null ? void 0 : _a.trim());
+  const isMainnet = (config == null ? void 0 : config.network) === "mainnet-beta";
+  const hasCollections = ((collections == null ? void 0 : collections.length) ?? 0) > 0;
+  const hasFees = ((config == null ? void 0 : config.platformFeePercent) ?? 0) > 0 || ((config == null ? void 0 : config.collectionCreationFeeSOL) ?? 0) > 0;
+  const steps = [
+    {
+      number: 1,
+      title: "Connect Phantom Wallet",
+      description: "You're already here — the first authenticated user is admin.",
+      detail: "Your Phantom wallet is now linked as the platform admin. Only you can access this dashboard and configure the app.",
+      isComplete: true
+    },
+    {
+      number: 2,
+      title: "Configure Escrow Wallet",
+      description: "Set the Solana address users will send their NFTs to.",
+      detail: "This must be a Solana wallet you fully control (e.g. a Phantom wallet you own). Users will deposit NFTs to this address when listing them on the marketplace. Enter it in App Configuration → Escrow Wallet Address below.",
+      isComplete: hasEscrow
+    },
+    {
+      number: 3,
+      title: "Set Mainnet RPC URL",
+      description: "Switch from devnet to a mainnet-beta RPC endpoint.",
+      detail: 'Use the public mainnet RPC (https://api.mainnet-beta.solana.com) or a premium provider like Helius, QuickNode, or Alchemy for better reliability. Set Network to "Mainnet Beta" and update the RPC URL in App Configuration below.',
+      isComplete: isMainnet
+    },
+    {
+      number: 4,
+      title: "Register NFT Collections",
+      description: "Add the collections users can deposit and trade.",
+      detail: 'For each collection you need: the collection name, verified creator/collection address (mint address), and the metadata program address (usually the Metaplex Token Metadata program: metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s). Use the "Add Collection" button in the Registered Collections section below.',
+      isComplete: hasCollections
+    },
+    {
+      number: 5,
+      title: "Set Platform Fees",
+      description: "Configure the platform fee % and collection creation fee.",
+      detail: "Platform fee is taken from each marketplace sale (e.g. 2.5%). Collection creation fee is charged in SOL when users create their own NFT collections. Set these in App Configuration → Collection Creation Fee and Platform Fee below.",
+      isComplete: hasFees
+    },
+    {
+      number: 6,
+      title: "Verify with NFT Lookup Tool",
+      description: "Test that your registered collections are working.",
+      detail: "Go to Settings and use the NFT Lookup tool. Paste a known NFT mint address from one of your registered collections — the app should confirm it belongs to a supported collection. This verifies your setup is complete.",
+      isComplete: hasCollections && isMainnet && hasEscrow
+    }
+  ];
+  const completedCount = steps.filter((s) => s.isComplete).length;
+  const allComplete = completedCount === steps.length;
+  if (!visible) return null;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.div,
+    {
+      initial: { opacity: 0, y: -8 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: -8 },
+      transition: { duration: 0.25 },
+      className: "rounded-2xl border border-primary/25 bg-primary/5 overflow-hidden",
+      "data-ocid": "admin.setup_guide.panel",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between px-5 py-4 border-b border-primary/15", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              type: "button",
+              onClick: toggleExpanded,
+              className: "flex items-center gap-3 flex-1 min-w-0 text-left group",
+              "data-ocid": "admin.setup_guide.toggle",
+              "aria-expanded": expanded,
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-9 h-9 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "w-4.5 h-4.5 text-primary" }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 flex-1", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5 flex-wrap", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-display font-semibold text-foreground text-sm", children: "Admin Setup Guide" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      Badge,
+                      {
+                        variant: "secondary",
+                        className: `text-xs font-mono ${allComplete ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/25" : "bg-primary/10 text-primary border-primary/20"}`,
+                        children: [
+                          completedCount,
+                          "/",
+                          steps.length,
+                          " complete"
+                        ]
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mt-0.5 truncate", children: allComplete ? "All steps complete — your app is ready for real use!" : "Follow these steps to configure SolVault for real use" })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-shrink-0 text-muted-foreground group-hover:text-foreground transition-colors", children: expanded ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronUp, { className: "w-4 h-4" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-4 h-4" }) })
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "button",
+              onClick: dismiss,
+              className: "ml-3 flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors",
+              "aria-label": "Dismiss setup guide",
+              "data-ocid": "admin.setup_guide.dismiss_button",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-3.5 h-3.5" })
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { initial: false, children: expanded && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          motion.div,
+          {
+            initial: { height: 0, opacity: 0 },
+            animate: { height: "auto", opacity: 1 },
+            exit: { height: 0, opacity: 0 },
+            transition: { duration: 0.22, ease: "easeInOut" },
+            className: "overflow-hidden",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-3", children: steps.map((step, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                motion.div,
+                {
+                  initial: { opacity: 0, x: -6 },
+                  animate: { opacity: 1, x: 0 },
+                  transition: { delay: i * 0.04 },
+                  className: `rounded-xl border p-4 flex gap-3.5 transition-colors ${step.isComplete ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card/60 border-border/60"}`,
+                  "data-ocid": `admin.setup_guide.step.${step.number}`,
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-1.5 pt-0.5", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(StepIndicator, { isComplete: step.isComplete }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] font-mono text-muted-foreground/50 font-semibold", children: step.number.toString().padStart(2, "0") })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 flex-1", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "p",
+                        {
+                          className: `text-sm font-semibold mb-1 ${step.isComplete ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"}`,
+                          children: step.title
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground leading-relaxed", children: step.detail })
+                    ] })
+                  ]
+                },
+                step.number
+              )) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-5 pb-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg bg-muted/40 border border-border/50 px-4 py-3 flex items-start gap-2.5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Wallet, { className: "w-4 h-4 text-primary mt-0.5 flex-shrink-0" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground leading-relaxed", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-foreground", children: "Address clarity tip:" }),
+                  " ",
+                  "Users see two addresses in their Settings — their own Phantom wallet address (where they receive outgoing transfers), and the ",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "app's escrow address" }),
+                  " ",
+                  "(where they send NFTs to deposit them). Make sure your escrow wallet is always funded with a small amount of SOL to cover transaction fees."
+                ] })
+              ] }) })
+            ]
+          },
+          "setup-steps"
+        ) })
+      ]
+    }
+  ) });
+}
 function CollectionRow({
   collection,
   index,
@@ -8861,7 +9168,8 @@ function ConfigSection() {
             className: "font-mono text-sm",
             "data-ocid": "admin.config.escrow_wallet.input"
           }
-        )
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "This is the address users will send NFTs to when depositing. Must be a Solana wallet you control." })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "cfg-rpc", children: "Solana RPC URL" }),
@@ -8869,12 +9177,13 @@ function ConfigSection() {
           Input,
           {
             id: "cfg-rpc",
-            placeholder: "https://api.devnet.solana.com",
+            placeholder: "https://api.mainnet-beta.solana.com",
             value: (current == null ? void 0 : current.solanaRpcUrl) ?? "",
             onChange: (e) => setField("solanaRpcUrl", e.target.value),
             "data-ocid": "admin.config.rpc_url.input"
           }
-        )
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "Use mainnet for production. Premium providers (Helius, QuickNode, Alchemy) offer better rate limits." })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { children: "Network" }),
@@ -8974,6 +9283,7 @@ function AdminPage() {
             ]
           }
         ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AdminSetupGuide, {}),
         /* @__PURE__ */ jsxRuntimeExports.jsx(StatsBar, {}),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-t border-border/50" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionsSection, {}),

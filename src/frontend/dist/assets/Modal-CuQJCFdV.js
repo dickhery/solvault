@@ -1,184 +1,5 @@
-var __typeError = (msg) => {
-  throw TypeError(msg);
-};
-var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
-var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
-var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
-var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
-var _client, _currentResult, _currentMutation, _mutateOptions, _MutationObserver_instances, updateResult_fn, notify_fn, _a;
-import { z as Subscribable, A as shallowEqualObjects, E as hashKey, F as getDefaultState, G as notifyManager, g as useQueryClient, r as reactExports, H as noop, I as shouldThrowError, c as createLucideIcon, J as React, q as useComposedRefs, j as jsxRuntimeExports, K as ReactDOM, X, b as cn } from "./index-CiUudlGD.js";
-import { u as useLayoutEffect2, e as Primitive, c as composeEventHandlers, g as dispatchDiscreteCustomEvent, f as useControllableState, b as createContextScope, d as createSlot, h as createContext2 } from "./label-lBnrv9wF.js";
-var MutationObserver$1 = (_a = class extends Subscribable {
-  constructor(client, options) {
-    super();
-    __privateAdd(this, _MutationObserver_instances);
-    __privateAdd(this, _client);
-    __privateAdd(this, _currentResult);
-    __privateAdd(this, _currentMutation);
-    __privateAdd(this, _mutateOptions);
-    __privateSet(this, _client, client);
-    this.setOptions(options);
-    this.bindMethods();
-    __privateMethod(this, _MutationObserver_instances, updateResult_fn).call(this);
-  }
-  bindMethods() {
-    this.mutate = this.mutate.bind(this);
-    this.reset = this.reset.bind(this);
-  }
-  setOptions(options) {
-    var _a2;
-    const prevOptions = this.options;
-    this.options = __privateGet(this, _client).defaultMutationOptions(options);
-    if (!shallowEqualObjects(this.options, prevOptions)) {
-      __privateGet(this, _client).getMutationCache().notify({
-        type: "observerOptionsUpdated",
-        mutation: __privateGet(this, _currentMutation),
-        observer: this
-      });
-    }
-    if ((prevOptions == null ? void 0 : prevOptions.mutationKey) && this.options.mutationKey && hashKey(prevOptions.mutationKey) !== hashKey(this.options.mutationKey)) {
-      this.reset();
-    } else if (((_a2 = __privateGet(this, _currentMutation)) == null ? void 0 : _a2.state.status) === "pending") {
-      __privateGet(this, _currentMutation).setOptions(this.options);
-    }
-  }
-  onUnsubscribe() {
-    var _a2;
-    if (!this.hasListeners()) {
-      (_a2 = __privateGet(this, _currentMutation)) == null ? void 0 : _a2.removeObserver(this);
-    }
-  }
-  onMutationUpdate(action) {
-    __privateMethod(this, _MutationObserver_instances, updateResult_fn).call(this);
-    __privateMethod(this, _MutationObserver_instances, notify_fn).call(this, action);
-  }
-  getCurrentResult() {
-    return __privateGet(this, _currentResult);
-  }
-  reset() {
-    var _a2;
-    (_a2 = __privateGet(this, _currentMutation)) == null ? void 0 : _a2.removeObserver(this);
-    __privateSet(this, _currentMutation, void 0);
-    __privateMethod(this, _MutationObserver_instances, updateResult_fn).call(this);
-    __privateMethod(this, _MutationObserver_instances, notify_fn).call(this);
-  }
-  mutate(variables, options) {
-    var _a2;
-    __privateSet(this, _mutateOptions, options);
-    (_a2 = __privateGet(this, _currentMutation)) == null ? void 0 : _a2.removeObserver(this);
-    __privateSet(this, _currentMutation, __privateGet(this, _client).getMutationCache().build(__privateGet(this, _client), this.options));
-    __privateGet(this, _currentMutation).addObserver(this);
-    return __privateGet(this, _currentMutation).execute(variables);
-  }
-}, _client = new WeakMap(), _currentResult = new WeakMap(), _currentMutation = new WeakMap(), _mutateOptions = new WeakMap(), _MutationObserver_instances = new WeakSet(), updateResult_fn = function() {
-  var _a2;
-  const state = ((_a2 = __privateGet(this, _currentMutation)) == null ? void 0 : _a2.state) ?? getDefaultState();
-  __privateSet(this, _currentResult, {
-    ...state,
-    isPending: state.status === "pending",
-    isSuccess: state.status === "success",
-    isError: state.status === "error",
-    isIdle: state.status === "idle",
-    mutate: this.mutate,
-    reset: this.reset
-  });
-}, notify_fn = function(action) {
-  notifyManager.batch(() => {
-    var _a2, _b, _c, _d, _e, _f, _g, _h;
-    if (__privateGet(this, _mutateOptions) && this.hasListeners()) {
-      const variables = __privateGet(this, _currentResult).variables;
-      const onMutateResult = __privateGet(this, _currentResult).context;
-      const context = {
-        client: __privateGet(this, _client),
-        meta: this.options.meta,
-        mutationKey: this.options.mutationKey
-      };
-      if ((action == null ? void 0 : action.type) === "success") {
-        try {
-          (_b = (_a2 = __privateGet(this, _mutateOptions)).onSuccess) == null ? void 0 : _b.call(
-            _a2,
-            action.data,
-            variables,
-            onMutateResult,
-            context
-          );
-        } catch (e) {
-          void Promise.reject(e);
-        }
-        try {
-          (_d = (_c = __privateGet(this, _mutateOptions)).onSettled) == null ? void 0 : _d.call(
-            _c,
-            action.data,
-            null,
-            variables,
-            onMutateResult,
-            context
-          );
-        } catch (e) {
-          void Promise.reject(e);
-        }
-      } else if ((action == null ? void 0 : action.type) === "error") {
-        try {
-          (_f = (_e = __privateGet(this, _mutateOptions)).onError) == null ? void 0 : _f.call(
-            _e,
-            action.error,
-            variables,
-            onMutateResult,
-            context
-          );
-        } catch (e) {
-          void Promise.reject(e);
-        }
-        try {
-          (_h = (_g = __privateGet(this, _mutateOptions)).onSettled) == null ? void 0 : _h.call(
-            _g,
-            void 0,
-            action.error,
-            variables,
-            onMutateResult,
-            context
-          );
-        } catch (e) {
-          void Promise.reject(e);
-        }
-      }
-    }
-    this.listeners.forEach((listener) => {
-      listener(__privateGet(this, _currentResult));
-    });
-  });
-}, _a);
-function useMutation(options, queryClient) {
-  const client = useQueryClient();
-  const [observer] = reactExports.useState(
-    () => new MutationObserver$1(
-      client,
-      options
-    )
-  );
-  reactExports.useEffect(() => {
-    observer.setOptions(options);
-  }, [observer, options]);
-  const result = reactExports.useSyncExternalStore(
-    reactExports.useCallback(
-      (onStoreChange) => observer.subscribe(notifyManager.batchCalls(onStoreChange)),
-      [observer]
-    ),
-    () => observer.getCurrentResult(),
-    () => observer.getCurrentResult()
-  );
-  const mutate = reactExports.useCallback(
-    (variables, mutateOptions) => {
-      observer.mutate(variables, mutateOptions).catch(noop);
-    },
-    [observer]
-  );
-  if (result.error && shouldThrowError(observer.options.throwOnError, [result.error])) {
-    throw result.error;
-  }
-  return { ...result, mutate, mutateAsync: result.mutate };
-}
+import { c as createLucideIcon, r as reactExports, W as React, K as useComposedRefs, j as jsxRuntimeExports, Y as ReactDOM, X, b as cn } from "./index-BIcych2j.js";
+import { u as useLayoutEffect2, e as Primitive, c as composeEventHandlers, g as dispatchDiscreteCustomEvent, f as useControllableState, b as createContextScope, d as createSlot, h as createContext2 } from "./label-DMZhWftV.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -205,8 +26,8 @@ function useCallbackRef$1(callback) {
     callbackRef.current = callback;
   });
   return reactExports.useMemo(() => (...args) => {
-    var _a2;
-    return (_a2 = callbackRef.current) == null ? void 0 : _a2.call(callbackRef, ...args);
+    var _a;
+    return (_a = callbackRef.current) == null ? void 0 : _a.call(callbackRef, ...args);
   }, []);
 }
 function useEscapeKeydown(onEscapeKeyDownProp, ownerDocument = globalThis == null ? void 0 : globalThis.document) {
@@ -605,9 +426,9 @@ function createFocusScopesStack() {
       stack.unshift(focusScope);
     },
     remove(focusScope) {
-      var _a2;
+      var _a;
       stack = arrayRemove(stack, focusScope);
-      (_a2 = stack[0]) == null ? void 0 : _a2.resume();
+      (_a = stack[0]) == null ? void 0 : _a.resume();
     }
   };
 }
@@ -624,11 +445,11 @@ function removeLinks(items) {
 }
 var PORTAL_NAME$1 = "Portal";
 var Portal$1 = reactExports.forwardRef((props, forwardedRef) => {
-  var _a2;
+  var _a;
   const { container: containerProp, ...portalProps } = props;
   const [mounted, setMounted] = reactExports.useState(false);
   useLayoutEffect2(() => setMounted(true), []);
-  const container = containerProp || mounted && ((_a2 = globalThis == null ? void 0 : globalThis.document) == null ? void 0 : _a2.body);
+  const container = containerProp || mounted && ((_a = globalThis == null ? void 0 : globalThis.document) == null ? void 0 : _a.body);
   return container ? ReactDOM.createPortal(/* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...portalProps, ref: forwardedRef }), container) : null;
 });
 Portal$1.displayName = PORTAL_NAME$1;
@@ -742,8 +563,8 @@ function getAnimationName(styles) {
   return (styles == null ? void 0 : styles.animationName) || "none";
 }
 function getElementRef(element) {
-  var _a2, _b;
-  let getter = (_a2 = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a2.get;
+  var _a, _b;
+  let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
   let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
   if (mayWarn) {
     return element.ref;
@@ -964,8 +785,8 @@ function createSidecarMedium(options) {
   medium.options = __assign({ async: true, ssr: false }, options);
   return medium;
 }
-var SideCar$1 = function(_a2) {
-  var sideCar = _a2.sideCar, rest = __rest(_a2, ["sideCar"]);
+var SideCar$1 = function(_a) {
+  var sideCar = _a.sideCar, rest = __rest(_a, ["sideCar"]);
   if (!sideCar) {
     throw new Error("Sidecar: please provide `sideCar` property to import the right car");
   }
@@ -986,11 +807,11 @@ var nothing = function() {
 };
 var RemoveScroll = reactExports.forwardRef(function(props, parentRef) {
   var ref = reactExports.useRef(null);
-  var _a2 = reactExports.useState({
+  var _a = reactExports.useState({
     onScrollCapture: nothing,
     onWheelCapture: nothing,
     onTouchMoveCapture: nothing
-  }), callbacks = _a2[0], setCallbacks = _a2[1];
+  }), callbacks = _a[0], setCallbacks = _a[1];
   var forwardProps = props.forwardProps, children = props.children, className = props.className, removeScrollBar = props.removeScrollBar, enabled = props.enabled, shards = props.shards, sideCar = props.sideCar, noRelative = props.noRelative, noIsolation = props.noIsolation, inert = props.inert, allowPinchZoom = props.allowPinchZoom, _b = props.as, Container = _b === void 0 ? "div" : _b, gapMode = props.gapMode, rest = __rest(props, ["forwardProps", "children", "className", "removeScrollBar", "enabled", "shards", "sideCar", "noRelative", "noIsolation", "inert", "allowPinchZoom", "as", "gapMode"]);
   var SideCar2 = sideCar;
   var containerRef = useMergeRefs([ref, parentRef]);
@@ -1074,8 +895,8 @@ var styleHookSingleton = function() {
 };
 var styleSingleton = function() {
   var useStyle = styleHookSingleton();
-  var Sheet = function(_a2) {
-    var styles = _a2.styles, dynamic = _a2.dynamic;
+  var Sheet = function(_a) {
+    var styles = _a.styles, dynamic = _a.dynamic;
     useStyle(styles, dynamic);
     return null;
   };
@@ -1116,8 +937,8 @@ var getGapWidth = function(gapMode) {
 };
 var Style = styleSingleton();
 var lockAttribute = "data-scroll-locked";
-var getStyles = function(_a2, allowRelative, gapMode, important) {
-  var left = _a2.left, top = _a2.top, right = _a2.right, gap = _a2.gap;
+var getStyles = function(_a, allowRelative, gapMode, important) {
+  var left = _a.left, top = _a.top, right = _a.right, gap = _a.gap;
   if (gapMode === void 0) {
     gapMode = "margin";
   }
@@ -1144,8 +965,8 @@ var useLockAttribute = function() {
     };
   }, []);
 };
-var RemoveScrollBar = function(_a2) {
-  var noRelative = _a2.noRelative, noImportant = _a2.noImportant, _b = _a2.gapMode, gapMode = _b === void 0 ? "margin" : _b;
+var RemoveScrollBar = function(_a) {
+  var noRelative = _a.noRelative, noImportant = _a.noImportant, _b = _a.gapMode, gapMode = _b === void 0 ? "margin" : _b;
   useLockAttribute();
   var gap = reactExports.useMemo(function() {
     return getGapWidth(gapMode);
@@ -1197,7 +1018,7 @@ var locationCouldBeScrolled = function(axis, node) {
     }
     var isScrollable = elementCouldBeScrolled(axis, current);
     if (isScrollable) {
-      var _a2 = getScrollVariables(axis, current), scrollHeight = _a2[1], clientHeight = _a2[2];
+      var _a = getScrollVariables(axis, current), scrollHeight = _a[1], clientHeight = _a[2];
       if (scrollHeight > clientHeight) {
         return true;
       }
@@ -1206,16 +1027,16 @@ var locationCouldBeScrolled = function(axis, node) {
   } while (current && current !== ownerDocument.body);
   return false;
 };
-var getVScrollVariables = function(_a2) {
-  var scrollTop = _a2.scrollTop, scrollHeight = _a2.scrollHeight, clientHeight = _a2.clientHeight;
+var getVScrollVariables = function(_a) {
+  var scrollTop = _a.scrollTop, scrollHeight = _a.scrollHeight, clientHeight = _a.clientHeight;
   return [
     scrollTop,
     scrollHeight,
     clientHeight
   ];
 };
-var getHScrollVariables = function(_a2) {
-  var scrollLeft = _a2.scrollLeft, scrollWidth = _a2.scrollWidth, clientWidth = _a2.clientWidth;
+var getHScrollVariables = function(_a) {
+  var scrollLeft = _a.scrollLeft, scrollWidth = _a.scrollWidth, clientWidth = _a.clientWidth;
   return [
     scrollLeft,
     scrollWidth,
@@ -1244,7 +1065,7 @@ var handleScroll = function(axis, endTarget, event, sourceDelta, noOverscroll) {
     if (!target) {
       break;
     }
-    var _a2 = getScrollVariables(axis, target), position = _a2[0], scroll_1 = _a2[1], capacity = _a2[2];
+    var _a = getScrollVariables(axis, target), position = _a[0], scroll_1 = _a[1], capacity = _a[2];
     var elementScroll = scroll_1 - capacity - directionFactor * position;
     if (position || elementScroll) {
       if (elementCouldBeScrolled(axis, target)) {
@@ -1686,9 +1507,9 @@ var DialogContentModal = reactExports.forwardRef(
         trapFocus: context.open,
         disableOutsidePointerEvents: true,
         onCloseAutoFocus: composeEventHandlers(props.onCloseAutoFocus, (event) => {
-          var _a2;
+          var _a;
           event.preventDefault();
-          (_a2 = context.triggerRef.current) == null ? void 0 : _a2.focus();
+          (_a = context.triggerRef.current) == null ? void 0 : _a.focus();
         }),
         onPointerDownOutside: composeEventHandlers(props.onPointerDownOutside, (event) => {
           const originalEvent = event.detail.originalEvent;
@@ -1717,8 +1538,8 @@ var DialogContentNonModal = reactExports.forwardRef(
         trapFocus: false,
         disableOutsidePointerEvents: false,
         onCloseAutoFocus: (event) => {
-          var _a2, _b;
-          (_a2 = props.onCloseAutoFocus) == null ? void 0 : _a2.call(props, event);
+          var _a, _b;
+          (_a = props.onCloseAutoFocus) == null ? void 0 : _a.call(props, event);
           if (!event.defaultPrevented) {
             if (!hasInteractedOutsideRef.current) (_b = context.triggerRef.current) == null ? void 0 : _b.focus();
             event.preventDefault();
@@ -1727,8 +1548,8 @@ var DialogContentNonModal = reactExports.forwardRef(
           hasPointerDownOutsideRef.current = false;
         },
         onInteractOutside: (event) => {
-          var _a2, _b;
-          (_a2 = props.onInteractOutside) == null ? void 0 : _a2.call(props, event);
+          var _a, _b;
+          (_a = props.onInteractOutside) == null ? void 0 : _a.call(props, event);
           if (!event.defaultPrevented) {
             hasInteractedOutsideRef.current = true;
             if (event.detail.originalEvent.type === "pointerdown") {
@@ -1848,8 +1669,8 @@ var DescriptionWarning = ({ contentRef, descriptionId }) => {
   const descriptionWarningContext = useWarningContext(DESCRIPTION_WARNING_NAME);
   const MESSAGE = `Warning: Missing \`Description\` or \`aria-describedby={undefined}\` for {${descriptionWarningContext.contentName}}.`;
   reactExports.useEffect(() => {
-    var _a2;
-    const describedById = (_a2 = contentRef.current) == null ? void 0 : _a2.getAttribute("aria-describedby");
+    var _a;
+    const describedById = (_a = contentRef.current) == null ? void 0 : _a.getAttribute("aria-describedby");
     if (descriptionId && describedById) {
       const hasDescription = document.getElementById(descriptionId);
       if (!hasDescription) console.warn(MESSAGE);
@@ -1919,27 +1740,10 @@ function Modal({
     )
   ] }) });
 }
-function Input({ className, type, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "input",
-    {
-      type,
-      "data-slot": "input",
-      className: cn(
-        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-        className
-      ),
-      ...props
-    }
-  );
-}
 export {
   Content as C,
   Description as D,
   FocusScope as F,
-  Input as I,
   Modal as M,
   Overlay as O,
   Plus as P,
@@ -1950,12 +1754,11 @@ export {
   Close as b,
   createDialogScope as c,
   Portal as d,
-  useCallbackRef$1 as e,
-  useId as f,
-  Portal$1 as g,
+  useId as e,
+  Portal$1 as f,
+  useFocusGuards as g,
   hideOthers as h,
-  useFocusGuards as i,
-  ReactRemoveScroll as j,
-  DismissableLayer as k,
-  useMutation as u
+  ReactRemoveScroll as i,
+  DismissableLayer as j,
+  useCallbackRef$1 as u
 };

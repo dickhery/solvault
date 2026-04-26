@@ -326,7 +326,7 @@ export interface backendInterface {
     getMyRole(): Promise<Role>;
     getNft(mintAddress: string): Promise<NftRecord | null>;
     /**
-     * / Query Solana Devnet balance for a given address; returns lamports as Text.
+     * / Query Solana balance for a given address; returns lamports as Text.
      */
     getSolanaBalance(address: string): Promise<string>;
     getUser(solanaAddress: string): Promise<UserProfile | null>;
