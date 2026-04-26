@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+src/frontend/node_modules/
+.mops/
+
+# Build outputs
+src/frontend/dist/
+src/backend/dist/*.wasm
+src/backend/dist/*.most
+.dfx/
+.icp/cache/
+
+# Generated local snapshots
+.old/
+
+# Environment and OS noise
+.DS_Store
+*.log
