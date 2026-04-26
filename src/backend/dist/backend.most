@@ -50,14 +50,6 @@ type ExternalBlob__671167343 = Blob;
 type Internal__8484328<K, V> =
   {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
 type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
-type LegacyAppConfig__784974719 =
-  {
-    collectionCreationFeeSOL : Float;
-    escrowWalletAddress : Text;
-    network : Text;
-    platformFeePercent : Float;
-    solanaRpcUrl : Text
-  };
 type ListingStatus__405744019 =
   {#auction : AuctionId__693981461; #fixedPrice : Nat; #unlisted};
 type ListingStatus__992681670 = {#active; #cancelled; #expired; #sold};
@@ -91,6 +83,7 @@ type NftRecord__261687923 =
   };
 type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type PreviousAppConfig__359710544 = AppConfig__1051343473;
 type Role__300349085 = {#admin; #guest; #user};
 type Role__717780527 = Role__300349085;
 type SchnorrAlgorithm__1060425748 = {#bip340secp256k1; #ed25519};
@@ -127,7 +120,7 @@ actor ({
       var adminAssigned : Bool;
       userRoles : Map__605269027<Principal, UserRole__1073662873>
     };
-  in appConfig : {var value : LegacyAppConfig__784974719};
+  in appConfig : {var value : PreviousAppConfig__359710544};
   stable auctionIdCounter : {var next : Nat};
   stable auctions :
     {
