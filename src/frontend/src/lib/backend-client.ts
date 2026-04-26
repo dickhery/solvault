@@ -2,13 +2,18 @@ import { ExternalBlob, type backendInterface, createActor } from "@/backend";
 import { idlFactory } from "@/declarations/backend.did";
 import type { _SERVICE } from "@/declarations/backend.did.d.ts";
 import {
+  getBackendCanisterId,
+  getBackendConfigurationError,
+  getBackendHost,
+  getBackendRootKey,
+} from "@/lib/canister-env";
+import {
   Actor,
   type ActorSubclass,
   HttpAgent,
+  type HttpAgentOptions,
   type SignIdentity,
 } from "@icp-sdk/core/agent";
-
-declare const process: { env: Record<string, string | undefined> };
 
 let queryActor: backendInterface | null = null;
 let mutationActor: backendInterface | null = null;
@@ -16,9 +21,7 @@ let authServiceActor: ActorSubclass<_SERVICE> | null = null;
 let authenticatedIdentity: SignIdentity | null = null;
 
 function getCanisterId(): string {
-  return (
-    (typeof process !== "undefined" && process.env.CANISTER_ID_BACKEND) || ""
-  );
+  return getBackendCanisterId() ?? "";
 }
 
 function getStorageGatewayUrl(): string {
@@ -45,18 +48,26 @@ async function downloadFile(hash: Uint8Array): Promise<ExternalBlob> {
   return ExternalBlob.fromURL(`${getStorageGatewayUrl()}/blob/${hexHash}`);
 }
 
+function getAgentOptions(identity?: SignIdentity | null): HttpAgentOptions {
+  const host = getBackendHost();
+  const rootKey = getBackendRootKey();
+
+  return {
+    ...(identity ? { identity } : {}),
+    ...(host ? { host } : {}),
+    ...(rootKey ? { rootKey } : {}),
+  };
+}
+
 function createWrappedActor(
   identity?: SignIdentity | null,
 ): backendInterface | null {
   const canisterId = getCanisterId();
   if (!canisterId) return null;
 
-  return createActor(
-    canisterId,
-    uploadFile,
-    downloadFile,
-    identity ? { agentOptions: { identity } } : {},
-  );
+  return createActor(canisterId, uploadFile, downloadFile, {
+    agentOptions: getAgentOptions(identity),
+  });
 }
 
 function createServiceActor(
@@ -65,7 +76,7 @@ function createServiceActor(
   const canisterId = getCanisterId();
   if (!canisterId) return null;
 
-  const agent = HttpAgent.createSync({ identity });
+  const agent = HttpAgent.createSync(getAgentOptions(identity));
   return Actor.createActor<_SERVICE>(idlFactory, {
     agent,
     canisterId,
@@ -95,7 +106,7 @@ export function getBackendMutationActor(): backendInterface {
     mutationActor = createWrappedActor(authenticatedIdentity);
   }
   if (!mutationActor) {
-    throw new Error("Backend not available");
+    throw new Error(getBackendConfigurationError() ?? "Backend not available");
   }
   return mutationActor;
 }
@@ -108,7 +119,7 @@ export function getBackendAuthServiceActor(): ActorSubclass<_SERVICE> {
     authServiceActor = createServiceActor(authenticatedIdentity);
   }
   if (!authServiceActor) {
-    throw new Error("Backend not available");
+    throw new Error(getBackendConfigurationError() ?? "Backend not available");
   }
   return authServiceActor;
 }

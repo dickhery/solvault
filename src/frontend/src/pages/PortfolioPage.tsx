@@ -62,6 +62,68 @@ function StatValue({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AddressPanel({
+  icon: Icon,
+  label,
+  description,
+  address,
+  emptyMessage,
+  accent,
+  note,
+  ocid,
+}: {
+  icon: React.ElementType;
+  label: string;
+  description: string;
+  address: string | null;
+  emptyMessage: string;
+  accent: "primary" | "accent";
+  note?: string;
+  ocid: string;
+}) {
+  const accentClasses =
+    accent === "accent"
+      ? {
+          surface: "bg-accent/10 border-accent/20",
+          icon: "text-accent",
+          chip: "hover:border-accent/50",
+        }
+      : {
+          surface: "bg-primary/10 border-primary/20",
+          icon: "text-primary",
+          chip: "hover:border-primary/50",
+        };
+
+  return (
+    <div className="card-glass p-5 space-y-3" data-ocid={ocid}>
+      <div className="flex items-center gap-3">
+        <div
+          className={`w-10 h-10 rounded-lg border flex items-center justify-center shrink-0 ${accentClasses.surface}`}
+        >
+          <Icon className={`w-5 h-5 ${accentClasses.icon}`} />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">{label}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      {address ? (
+        <>
+          <AddressChip
+            address={address}
+            full
+            className={`w-full justify-between ${accentClasses.chip}`}
+            data-ocid={`${ocid}.chip`}
+          />
+          {note && <p className="text-xs text-muted-foreground">{note}</p>}
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground italic">{emptyMessage}</p>
+      )}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Connect prompt
 // ---------------------------------------------------------------------------
@@ -151,7 +213,7 @@ export default function PortfolioPage() {
     data: nfts = [],
     isLoading: nftsLoading,
     error: nftsError,
-  } = useUserNfts(address);
+  } = useUserNfts([address, nftDepositAddress]);
 
   const { data: solBalance = 0, isLoading: balanceLoading } =
     useSolanaBalance(solDepositAddress);
@@ -237,68 +299,37 @@ export default function PortfolioPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div
-          className="card-glass p-5 space-y-3"
-          data-ocid="portfolio.sol_vault_card"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-              <Wallet className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                Send SOL To Your App Vault
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Deposits to this address fund your in-app SOL balance
-              </p>
-            </div>
-          </div>
-          {solDepositAddress ? (
-            <AddressChip
-              address={solDepositAddress}
-              full
-              className="w-full justify-between"
-              data-ocid="portfolio.sol_vault_chip"
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground italic">
-              Connect Phantom to derive your SOL vault address.
-            </p>
-          )}
-        </div>
-
-        <div
-          className="card-glass p-5 space-y-3"
-          data-ocid="portfolio.nft_vault_card"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
-              <Image className="w-5 h-5 text-accent" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                Send NFTs To Your App Vault
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Use this address for supported Solana NFT deposits
-              </p>
-            </div>
-          </div>
-          {nftDepositAddress ? (
-            <AddressChip
-              address={nftDepositAddress}
-              full
-              className="w-full justify-between"
-              data-ocid="portfolio.nft_vault_chip"
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground italic">
-              Connect Phantom to derive your NFT vault address.
-            </p>
-          )}
-        </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <AddressPanel
+          icon={Wallet}
+          label="Connected Phantom Wallet"
+          description="Your personal Solana wallet address"
+          address={address}
+          emptyMessage="Connect Phantom to display your wallet address."
+          accent="primary"
+          note="Use this for direct wallet activity. This is not the SolVault deposit address."
+          ocid="portfolio.user_wallet_card"
+        />
+        <AddressPanel
+          icon={Wallet}
+          label="App SOL Vault Address"
+          description="Deposits to this address fund your in-app SOL balance"
+          address={solDepositAddress}
+          emptyMessage="Connect Phantom to derive your SOL vault address."
+          accent="primary"
+          note="Send SOL here when you want the balance held inside SolVault."
+          ocid="portfolio.sol_vault_card"
+        />
+        <AddressPanel
+          icon={Image}
+          label="App NFT Vault Address"
+          description="Use this exact recipient for supported Solana NFT deposits"
+          address={nftDepositAddress}
+          emptyMessage="Connect Phantom to derive your NFT vault address."
+          accent="accent"
+          note="When sending NFTs from Phantom into SolVault, this is the address to paste as the recipient."
+          ocid="portfolio.nft_vault_card"
+        />
       </div>
 
       {/* ── Wallet Overview ──────────────────────────────────────────── */}

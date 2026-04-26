@@ -41,17 +41,37 @@ export function nftRecordToCardData(nft: NftRecord): NftCardData {
 // Hooks
 // ---------------------------------------------------------------------------
 
-export function useUserNfts(ownerAddress: string | null) {
+export function useUserNfts(ownerAddresses: Array<string | null | undefined>) {
+  const normalizedOwnerAddresses = [
+    ...new Set(
+      ownerAddresses.filter(
+        (ownerAddress): ownerAddress is string => Boolean(ownerAddress),
+      ),
+    ),
+  ];
+  normalizedOwnerAddresses.sort();
+
   return useQuery<NftCardData[]>({
-    queryKey: ["user-nfts", ownerAddress],
+    queryKey: ["user-nfts", normalizedOwnerAddresses],
     queryFn: async () => {
-      if (!ownerAddress) return [];
+      if (normalizedOwnerAddresses.length === 0) return [];
       const actor = getBackendQueryActor();
       if (!actor) return [];
-      const records = await actor.getUserNfts(ownerAddress);
-      return records.map(nftRecordToCardData);
+
+      const nftRecords = await Promise.all(
+        normalizedOwnerAddresses.map((ownerAddress) =>
+          actor.getUserNfts(ownerAddress),
+        ),
+      );
+
+      const dedupedNfts = new Map<string, NftCardData>();
+      for (const record of nftRecords.flat()) {
+        dedupedNfts.set(record.mintAddress, nftRecordToCardData(record));
+      }
+
+      return [...dedupedNfts.values()];
     },
-    enabled: !!ownerAddress,
+    enabled: normalizedOwnerAddresses.length > 0,
     staleTime: 30_000,
   });
 }
