@@ -49,7 +49,7 @@ module {
     nfts : Map.Map<Text, NftRecord>,
     ownerAddress : Text,
   ) : [NftRecord] {
-    let all = nfts.values().toArray();
+    let all = Iter.toArray(nfts.values());
     all.filter(func(n : NftRecord) : Bool {
       n.ownerAddress == ownerAddress
     });

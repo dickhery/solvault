@@ -216,6 +216,17 @@ export enum Role {
     user = "user",
     guest = "guest"
 }
+export enum VaultKind {
+    nft = "nft",
+    sol = "sol"
+}
+export interface WalletSession {
+    role: Role;
+    nftDepositPublicKey: Uint8Array;
+    config: AppConfig;
+    solanaAddress: string;
+    solDepositPublicKey: Uint8Array;
+}
 export interface backendInterface {
     addNftToUserCollection(collectionId: string, nft: NftInput): Promise<Result_5>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
@@ -242,10 +253,12 @@ export interface backendInterface {
     getUserCollections(ownerAddress: string): Promise<Array<UserCollection>>;
     getUserNfts(ownerAddress: string): Promise<Array<NftRecord>>;
     isCallerAdmin(): Promise<boolean>;
+    loginWithPhantom(solanaAddress: string): Promise<WalletSession>;
     placeBid(auctionId: string, bidAmountSOL: number, bidderAddress: string, txSignature: string): Promise<Result_1>;
     registerCollection(data: CollectionInput): Promise<string>;
     registerUser(solanaAddress: string): Promise<Role>;
     settleAuction(auctionId: string, winnerAddress: string, paymentTxSignature: string): Promise<Result>;
+    signWithVault(vaultKind: VaultKind, message: Uint8Array): Promise<Uint8Array>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateCollection(id: string, data: CollectionInput): Promise<Result>;
     updateConfig(config: AppConfig): Promise<Result>;

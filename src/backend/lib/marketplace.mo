@@ -85,7 +85,7 @@ module {
     listings : Map.Map<Text, Listing>,
     filter : ?ListingFilter,
   ) : [Listing] {
-    let all = listings.values().toArray();
+    let all = Iter.toArray(listings.values());
     switch (filter) {
       case null { all };
       case (?f) {
@@ -230,7 +230,7 @@ module {
     auctions : Map.Map<Text, Auction>,
     filter : ?AuctionFilter,
   ) : [Auction] {
-    let all = auctions.values().toArray();
+    let all = Iter.toArray(auctions.values());
     switch (filter) {
       case null { all };
       case (?f) {

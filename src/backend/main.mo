@@ -1,4 +1,5 @@
 import Map "mo:core/Map";
+import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
@@ -20,7 +21,9 @@ import MixinNfts "mixins/nfts-api";
 import MixinMarketplace "mixins/marketplace-api";
 import MixinConfig "mixins/config-api";
 import UserLib "lib/users";
+import { migration } "Migration";
 
+(with migration)
 persistent actor {
   type SchnorrAlgorithm = { #bip340secp256k1; #ed25519 };
   type SchnorrKeyId = { algorithm : SchnorrAlgorithm; name : Text };
@@ -190,7 +193,7 @@ persistent actor {
   /// Expected format: {"jsonrpc":"2.0","result":{"context":{"slot":N},"value":LAMPORTS},"id":1}
   func parseLamports(json : Text) : Text {
     // Split on `"value":` — take the part after the first occurrence
-    let parts = json.split(#text "\"value\":").toArray();
+    let parts = Iter.toArray(json.split(#text "\"value\":"));
     if (parts.size() < 2) return "0";
     let after = parts[1];
     // Collect consecutive digit characters from the start of `after`

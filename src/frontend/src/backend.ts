@@ -302,6 +302,17 @@ export enum Role {
     user = "user",
     guest = "guest"
 }
+export enum VaultKind {
+    nft = "nft",
+    sol = "sol"
+}
+export interface WalletSession {
+    role: Role;
+    nftDepositPublicKey: Uint8Array;
+    config: AppConfig;
+    solanaAddress: string;
+    solDepositPublicKey: Uint8Array;
+}
 export interface backendInterface {
     _immutableObjectStorageBlobsAreLive(hashes: Array<Uint8Array>): Promise<Array<boolean>>;
     _immutableObjectStorageBlobsToDelete(): Promise<Array<Uint8Array>>;
@@ -335,10 +346,12 @@ export interface backendInterface {
     getUserCollections(ownerAddress: string): Promise<Array<UserCollection>>;
     getUserNfts(ownerAddress: string): Promise<Array<NftRecord>>;
     isCallerAdmin(): Promise<boolean>;
+    loginWithPhantom(solanaAddress: string): Promise<WalletSession>;
     placeBid(auctionId: string, bidAmountSOL: number, bidderAddress: string, txSignature: string): Promise<Result_1>;
     registerCollection(data: CollectionInput): Promise<string>;
     registerUser(solanaAddress: string): Promise<Role>;
     settleAuction(auctionId: string, winnerAddress: string, paymentTxSignature: string): Promise<Result>;
+    signWithVault(vaultKind: VaultKind, message: Uint8Array): Promise<Uint8Array>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateCollection(id: string, data: CollectionInput): Promise<Result>;
     updateConfig(config: AppConfig): Promise<Result>;
@@ -756,6 +769,32 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async loginWithPhantom(arg0: string): Promise<WalletSession> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.loginWithPhantom(arg0);
+                return {
+                    role: from_candid_Role_n60(this._uploadFile, this._downloadFile, result.role),
+                    nftDepositPublicKey: new Uint8Array(result.nftDepositPublicKey),
+                    config: result.config,
+                    solanaAddress: result.solanaAddress,
+                    solDepositPublicKey: new Uint8Array(result.solDepositPublicKey)
+                };
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.loginWithPhantom(arg0);
+            return {
+                role: from_candid_Role_n60(this._uploadFile, this._downloadFile, result.role),
+                nftDepositPublicKey: new Uint8Array(result.nftDepositPublicKey),
+                config: result.config,
+                solanaAddress: result.solanaAddress,
+                solDepositPublicKey: new Uint8Array(result.solDepositPublicKey)
+            };
+        }
+    }
     async placeBid(arg0: string, arg1: number, arg2: string, arg3: string): Promise<Result_1> {
         if (this.processError) {
             try {
@@ -810,6 +849,25 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.settleAuction(arg0, arg1, arg2);
             return from_candid_Result_n20(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async signWithVault(arg0: VaultKind, arg1: Uint8Array): Promise<Uint8Array> {
+        const vaultKind = arg0 == VaultKind.nft ? {
+            nft: null
+        } : {
+            sol: null
+        };
+        if (this.processError) {
+            try {
+                const result = await this.actor.signWithVault(vaultKind, arg1);
+                return new Uint8Array(result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.signWithVault(vaultKind, arg1);
+            return new Uint8Array(result);
         }
     }
     async transform(arg0: TransformationInput): Promise<TransformationOutput> {

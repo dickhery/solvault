@@ -38,7 +38,7 @@ module {
   public func getCollections(
     collections : Map.Map<Text, Collection>,
   ) : [Collection] {
-    collections.values().toArray();
+    Iter.toArray(collections.values());
   };
 
   public func updateCollection(
@@ -110,7 +110,7 @@ module {
     userCollections : Map.Map<Text, UserCollection>,
     ownerAddress : Text,
   ) : [UserCollection] {
-    let all = userCollections.values().toArray();
+    let all = Iter.toArray(userCollections.values());
     all.filter(func(uc : UserCollection) : Bool {
       uc.ownerAddress == ownerAddress
     });

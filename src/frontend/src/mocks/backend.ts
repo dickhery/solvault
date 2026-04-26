@@ -5,11 +5,17 @@ import {
   type _ImmutableObjectStorageRefillInformation,
   type _ImmutableObjectStorageRefillResult,
   type backendInterface,
-  type Role,
+  Role,
 } from "../backend";
 import type { Principal } from "@icp-sdk/core/principal";
 
 const now = BigInt(Date.now()) * BigInt(1_000_000);
+const solVaultPublicKey = new Uint8Array(
+  Array.from({ length: 32 }, (_, index) => index + 1),
+);
+const nftVaultPublicKey = new Uint8Array(
+  Array.from({ length: 32 }, (_, index) => index + 33),
+);
 
 export const mockBackend: backendInterface = {
   addNftToUserCollection: async () => ({ __kind__: "ok", ok: {
@@ -279,6 +285,23 @@ export const mockBackend: backendInterface = {
 
   isCallerAdmin: async () => true,
 
+  loginWithPhantom: async (solanaAddress) => ({
+    role: Role.admin,
+    nftDepositPublicKey: nftVaultPublicKey,
+    config: {
+      thresholdKeyName: "dfx_test_key",
+      collectionCreationFeeSOL: 0.5,
+      solanaRpcUrl: "https://api.devnet.solana.com",
+      network: "devnet",
+      escrowWalletAddress: "EscrowXdvQxqY1SPUHrZsJ5mHDr3KAzYMgHGGLvUXC8h",
+      collectionPaymentAddress:
+        "CollectPayQxqY1SPUHrZsJ5mHDr3KAzYMgHGGLvUXC9i",
+      platformFeePercent: 2.5,
+    },
+    solanaAddress,
+    solDepositPublicKey: solVaultPublicKey,
+  }),
+
   placeBid: async () => ({ __kind__: "ok", ok: {
     txSignature: "txSig123",
     placedAt: now,
@@ -291,6 +314,9 @@ export const mockBackend: backendInterface = {
   registerUser: async () => "admin" as Role,
 
   settleAuction: async () => ({ __kind__: "ok", ok: null }),
+
+  signWithVault: async () =>
+    new Uint8Array(Array.from({ length: 64 }, (_, index) => index + 1)),
 
   transform: async (input) => ({
     status: input.response.status,
