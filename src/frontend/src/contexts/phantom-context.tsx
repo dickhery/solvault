@@ -1,3 +1,16 @@
+import type { AppConfig } from "@/backend";
+import {
+  type WalletSession,
+  getBackendAuthServiceActor,
+  setAuthenticatedBackendIdentity,
+} from "@/lib/backend-client";
+import { PhantomEd25519Identity } from "@/lib/phantom-identity";
+import {
+  type PhantomProvider,
+  type PhantomPublicKey,
+  getPhantomProvider,
+} from "@/lib/phantom-provider";
+import { publicKeyBytesToAddress } from "@/lib/solana";
 import {
   createContext,
   useCallback,
@@ -6,6 +19,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 
 export type UserRole = "admin" | "user" | "guest";
 
@@ -14,13 +28,22 @@ interface PhantomContextValue {
   role: UserRole;
   isConnecting: boolean;
   isConnected: boolean;
+  solDepositAddress: string | null;
+  nftDepositAddress: string | null;
+  sessionConfig: AppConfig | null;
   connect: () => Promise<void>;
-  disconnect: () => void;
+  disconnect: () => Promise<void>;
 }
 
 const PhantomContext = createContext<PhantomContextValue | null>(null);
 
 const STORAGE_KEY = "phantom_address";
+
+function roleFromWalletSession(role: WalletSession["role"]): UserRole {
+  if ("admin" in role) return "admin";
+  if ("user" in role) return "user";
+  return "guest";
+}
 
 export function PhantomContextProvider({
   children,
@@ -28,67 +51,97 @@ export function PhantomContextProvider({
   const [address, setAddress] = useState<string | null>(null);
   const [role, setRole] = useState<UserRole>("guest");
   const [isConnecting, setIsConnecting] = useState(false);
+  const [solDepositAddress, setSolDepositAddress] = useState<string | null>(
+    null,
+  );
+  const [nftDepositAddress, setNftDepositAddress] = useState<string | null>(
+    null,
+  );
+  const [sessionConfig, setSessionConfig] = useState<AppConfig | null>(null);
   const hasAutoConnected = useRef(false);
 
-  const applyConnection = useCallback((addr: string, userRole: UserRole) => {
-    setAddress(addr);
-    setRole(userRole);
-    localStorage.setItem(STORAGE_KEY, addr);
+  const clearConnection = useCallback(() => {
+    setAuthenticatedBackendIdentity(null);
+    setAddress(null);
+    setRole("guest");
+    setSolDepositAddress(null);
+    setNftDepositAddress(null);
+    setSessionConfig(null);
+    localStorage.removeItem(STORAGE_KEY);
   }, []);
+
+  const applyWalletSession = useCallback(
+    (solanaAddress: string, session: WalletSession) => {
+      setAddress(solanaAddress);
+      setRole(roleFromWalletSession(session.role));
+      setSolDepositAddress(
+        publicKeyBytesToAddress(session.solDepositPublicKey),
+      );
+      setNftDepositAddress(
+        publicKeyBytesToAddress(session.nftDepositPublicKey),
+      );
+      setSessionConfig(session.config as AppConfig);
+      localStorage.setItem(STORAGE_KEY, solanaAddress);
+    },
+    [],
+  );
+
+  const authenticateWithBackend = useCallback(
+    async (provider: PhantomProvider, solanaAddress: string) => {
+      const identity = PhantomEd25519Identity.fromAddress(
+        provider,
+        solanaAddress,
+      );
+      setAuthenticatedBackendIdentity(identity);
+
+      try {
+        const actor = getBackendAuthServiceActor();
+        const session = await actor.loginWithPhantom(solanaAddress);
+        applyWalletSession(solanaAddress, session);
+      } catch (error) {
+        setAuthenticatedBackendIdentity(null);
+        throw error;
+      }
+    },
+    [applyWalletSession],
+  );
 
   const connect = useCallback(async () => {
     setIsConnecting(true);
     try {
-      // Check for injected Phantom provider (browser extension)
-      const solana = (
-        window as Window & {
-          solana?: {
-            connect: () => Promise<{ publicKey: { toString: () => string } }>;
-            isPhantom?: boolean;
-          };
-        }
-      ).solana;
-      if (!solana || !solana.isPhantom) {
+      const provider = getPhantomProvider();
+      if (!provider || !provider.isPhantom) {
         window.open("https://phantom.app/", "_blank");
         throw new Error(
           "Phantom wallet not found. Please install the Phantom browser extension.",
         );
       }
 
-      const response = await solana.connect();
+      const response = await provider.connect();
       const solanaAddress = response.publicKey.toString();
-
-      // Determine role: first ever registered user becomes admin
-      const existingAdmin = localStorage.getItem("phantom_admin_address");
-      let userRole: UserRole;
-      if (!existingAdmin) {
-        localStorage.setItem("phantom_admin_address", solanaAddress);
-        userRole = "admin";
-      } else if (existingAdmin === solanaAddress) {
-        userRole = "admin";
-      } else {
-        userRole = "user";
-      }
-
-      applyConnection(solanaAddress, userRole);
+      await authenticateWithBackend(provider, solanaAddress);
     } catch (err) {
+      clearConnection();
+      const message =
+        err instanceof Error ? err.message : "Failed to connect Phantom";
       console.error("Phantom connect error:", err);
-      throw err;
+      toast.error(message);
     } finally {
       setIsConnecting(false);
     }
-  }, [applyConnection]);
+  }, [authenticateWithBackend, clearConnection]);
 
-  const disconnect = useCallback(() => {
-    const solana = (window as Window & { solana?: { disconnect: () => void } })
-      .solana;
-    solana?.disconnect();
-    setAddress(null);
-    setRole("guest");
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+  const disconnect = useCallback(async () => {
+    const provider = getPhantomProvider();
+    try {
+      await provider?.disconnect();
+    } catch (err) {
+      console.warn("Phantom disconnect error:", err);
+    } finally {
+      clearConnection();
+    }
+  }, [clearConnection]);
 
-  // Auto-reconnect on load
   useEffect(() => {
     if (hasAutoConnected.current) return;
     hasAutoConnected.current = true;
@@ -96,30 +149,53 @@ export function PhantomContextProvider({
     const savedAddress = localStorage.getItem(STORAGE_KEY);
     if (!savedAddress) return;
 
-    const solana = (
-      window as Window & {
-        solana?: {
-          connect: (opts: { onlyIfTrusted: boolean }) => Promise<{
-            publicKey: { toString: () => string };
-          }>;
-          isPhantom?: boolean;
-        };
-      }
-    ).solana;
-    if (!solana?.isPhantom) return;
+    const provider = getPhantomProvider();
+    if (!provider?.isPhantom) return;
 
-    solana
+    setIsConnecting(true);
+    provider
       .connect({ onlyIfTrusted: true })
-      .then((resp) => {
-        const addr = resp.publicKey.toString();
-        const existingAdmin = localStorage.getItem("phantom_admin_address");
-        const userRole: UserRole = existingAdmin === addr ? "admin" : "user";
-        applyConnection(addr, userRole);
+      .then(async (resp) => {
+        await authenticateWithBackend(provider, resp.publicKey.toString());
       })
       .catch(() => {
-        localStorage.removeItem(STORAGE_KEY);
+        clearConnection();
+      })
+      .finally(() => {
+        setIsConnecting(false);
       });
-  }, [applyConnection]);
+  }, [authenticateWithBackend, clearConnection]);
+
+  useEffect(() => {
+    const provider = getPhantomProvider();
+    if (!provider?.on || !provider?.off) return;
+
+    const handleDisconnect = () => {
+      clearConnection();
+    };
+
+    const handleAccountChanged = (nextPublicKey?: PhantomPublicKey | null) => {
+      if (!nextPublicKey) {
+        void disconnect();
+        return;
+      }
+
+      const nextAddress = nextPublicKey.toString();
+      void authenticateWithBackend(provider, nextAddress).catch((error) => {
+        console.error("Failed to re-authenticate after account change:", error);
+        toast.error("Failed to switch Phantom account");
+        clearConnection();
+      });
+    };
+
+    provider.on("disconnect", handleDisconnect);
+    provider.on("accountChanged", handleAccountChanged);
+
+    return () => {
+      provider.off?.("disconnect", handleDisconnect);
+      provider.off?.("accountChanged", handleAccountChanged);
+    };
+  }, [authenticateWithBackend, clearConnection, disconnect]);
 
   return (
     <PhantomContext.Provider
@@ -128,6 +204,9 @@ export function PhantomContextProvider({
         role,
         isConnecting,
         isConnected: !!address,
+        solDepositAddress,
+        nftDepositAddress,
+        sessionConfig,
         connect,
         disconnect,
       }}

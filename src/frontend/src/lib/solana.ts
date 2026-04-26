@@ -1,3 +1,5 @@
+import { PublicKey } from "@solana/web3.js";
+
 export const SOLANA_NETWORK = "devnet" as const;
 export const DEVNET_RPC_URL = "https://api.devnet.solana.com";
 export const MAINNET_RPC_URL = "https://api.mainnet-beta.solana.com";
@@ -55,4 +57,8 @@ export function truncateAddress(address: string): string {
 
 export function formatSol(sol: number, decimals = 4): string {
   return sol.toFixed(decimals);
+}
+
+export function publicKeyBytesToAddress(bytes: Uint8Array | number[]): string {
+  return new PublicKey(Uint8Array.from(bytes)).toBase58();
 }

@@ -2,6 +2,7 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Iter "mo:core/Iter";
 import Time "mo:core/Time";
+import Text "mo:core/Text";
 import CollectionTypes "../types/collections";
 import CommonTypes "../types/common";
 
@@ -18,7 +19,7 @@ module {
     data : CollectionInput,
     createdBy : Text,
   ) : Text {
-    let id = idCounter.next.toText();
+    let id = debug_show (idCounter.next);
     idCounter.next += 1;
     let collection : Collection = {
       id;
@@ -85,7 +86,7 @@ module {
     if (txSignature.size() == 0) {
       return #err("txSignature must not be empty — SOL fee payment is required");
     };
-    let id = idCounter.next.toText();
+    let id = debug_show (idCounter.next);
     idCounter.next += 1;
     let uc : UserCollection = {
       id;

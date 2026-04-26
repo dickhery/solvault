@@ -112,7 +112,7 @@ function ConnectPrompt({ onConnect }: { onConnect: () => void }) {
       </div>
 
       <div className="flex items-center gap-6 text-xs text-muted-foreground">
-        {["Non-custodial", "Solana Devnet", "Secure"].map((f) => (
+        {["Non-custodial", "Solana Ready", "Secure"].map((f) => (
           <span key={f} className="flex items-center gap-1.5">
             <Sparkles className="w-3 h-3 text-accent" />
             {f}
@@ -128,12 +128,17 @@ function ConnectPrompt({ onConnect }: { onConnect: () => void }) {
 // ---------------------------------------------------------------------------
 
 export default function PortfolioPage() {
-  const { isConnected, address, connect, role } = usePhantom();
+  const {
+    isConnected,
+    address,
+    connect,
+    role,
+    solDepositAddress,
+    nftDepositAddress,
+  } = usePhantom();
   const navigate = useNavigate();
 
-  // Load app config to get the escrow wallet address and apply admin-configured RPC URL
   const { data: appConfig } = useAppConfig();
-  const escrowAddress = appConfig?.escrowWalletAddress ?? null;
 
   // Apply admin-configured RPC URL whenever config loads
   useEffect(() => {
@@ -148,9 +153,8 @@ export default function PortfolioPage() {
     error: nftsError,
   } = useUserNfts(address);
 
-  // Balance reflects the escrow wallet (the address users send SOL to), not the Phantom wallet
   const { data: solBalance = 0, isLoading: balanceLoading } =
-    useSolanaBalance(escrowAddress);
+    useSolanaBalance(solDepositAddress);
 
   const { data: collections = [], isLoading: collectionsLoading } =
     useUserCollections(address);
@@ -202,6 +206,16 @@ export default function PortfolioPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          {role === "admin" && (
+            <Button
+              onClick={() => navigate({ to: "/admin" })}
+              variant="outline"
+              className="border-accent/20 text-accent hover:bg-accent/10"
+              data-ocid="portfolio.admin_dashboard_button"
+            >
+              Admin Dashboard
+            </Button>
+          )}
           <Button
             onClick={() => navigate({ to: "/my-collections" })}
             variant="outline"
@@ -223,6 +237,70 @@ export default function PortfolioPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div
+          className="card-glass p-5 space-y-3"
+          data-ocid="portfolio.sol_vault_card"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <Wallet className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Send SOL To Your App Vault
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Deposits to this address fund your in-app SOL balance
+              </p>
+            </div>
+          </div>
+          {solDepositAddress ? (
+            <AddressChip
+              address={solDepositAddress}
+              full
+              className="w-full justify-between"
+              data-ocid="portfolio.sol_vault_chip"
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground italic">
+              Connect Phantom to derive your SOL vault address.
+            </p>
+          )}
+        </div>
+
+        <div
+          className="card-glass p-5 space-y-3"
+          data-ocid="portfolio.nft_vault_card"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+              <Image className="w-5 h-5 text-accent" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Send NFTs To Your App Vault
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Use this address for supported Solana NFT deposits
+              </p>
+            </div>
+          </div>
+          {nftDepositAddress ? (
+            <AddressChip
+              address={nftDepositAddress}
+              full
+              className="w-full justify-between"
+              data-ocid="portfolio.nft_vault_chip"
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground italic">
+              Connect Phantom to derive your NFT vault address.
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* ── Wallet Overview ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -232,9 +310,9 @@ export default function PortfolioPage() {
         >
           {balanceLoading ? (
             <Skeleton className="h-8 w-28" />
-          ) : !escrowAddress ? (
+          ) : !solDepositAddress ? (
             <span className="text-sm text-muted-foreground italic">
-              Not configured
+              Not ready
             </span>
           ) : (
             <SolAmount sol={solBalance} size="xl" />

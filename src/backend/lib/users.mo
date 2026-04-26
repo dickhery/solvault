@@ -1,6 +1,8 @@
 import Map "mo:core/Map";
 import Array "mo:core/Array";
+import Principal "mo:core/Principal";
 import Time "mo:core/Time";
+import Text "mo:core/Text";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import UserTypes "../types/users";
 import CommonTypes "../types/common";

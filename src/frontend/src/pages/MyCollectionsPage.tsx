@@ -146,7 +146,9 @@ export default function MyCollectionsPage() {
   const [mintTarget, setMintTarget] = useState<UserCollection | null>(null);
 
   const feeSOL = config?.collectionCreationFeeSOL ?? 0.5;
-  const escrow = config?.escrowWalletAddress ?? "";
+  const collectionPaymentAddress = config?.collectionPaymentAddress ?? "";
+  const solanaRpcUrl = config?.solanaRpcUrl ?? "https://api.devnet.solana.com";
+  const network = config?.network ?? "devnet";
 
   if (!isConnected) {
     return (
@@ -215,7 +217,9 @@ export default function MyCollectionsPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         collectionCreationFeeSOL={feeSOL}
-        escrowWalletAddress={escrow}
+        collectionPaymentAddress={collectionPaymentAddress}
+        solanaRpcUrl={solanaRpcUrl}
+        network={network}
       />
 
       {/* Mint NFT Modal */}

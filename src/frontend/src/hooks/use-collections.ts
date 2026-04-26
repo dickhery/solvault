@@ -1,53 +1,22 @@
-import {
-  type AppConfig,
-  ExternalBlob,
-  type NftInput,
-  type UserCollection,
-  type UserCollectionInput,
-  createActor,
+import type {
+  AppConfig,
+  NftInput,
+  UserCollection,
+  UserCollectionInput,
 } from "@/backend";
+import {
+  getBackendMutationActor,
+  getBackendQueryActor,
+} from "@/lib/backend-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-// ── Actor singleton ───────────────────────────────────────────────────────────
-
-declare const process: { env: Record<string, string | undefined> };
-
-function getActor() {
-  const canisterId =
-    (typeof process !== "undefined" && process.env.CANISTER_ID_BACKEND) || "";
-  if (!canisterId) return null;
-
-  const storageGatewayUrl =
-    (typeof process !== "undefined" && process.env.STORAGE_GATEWAY_URL) ||
-    "https://blob.caffeine.ai";
-
-  const uploadFile = async (blob: ExternalBlob): Promise<Uint8Array> => {
-    const bytes = await blob.getBytes();
-    const res = await fetch(`${storageGatewayUrl}/upload`, {
-      method: "POST",
-      body: bytes,
-    });
-    if (!res.ok) throw new Error("Upload failed");
-    return new Uint8Array(await res.arrayBuffer());
-  };
-
-  const downloadFile = async (hash: Uint8Array): Promise<ExternalBlob> => {
-    const hexHash = Array.from(hash)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return ExternalBlob.fromURL(`${storageGatewayUrl}/blob/${hexHash}`);
-  };
-
-  return createActor(canisterId, uploadFile, downloadFile);
-}
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
 export function useConfig() {
   return useQuery<AppConfig>({
-    queryKey: ["config"],
+    queryKey: ["appConfig"],
     queryFn: async () => {
-      const actor = getActor();
+      const actor = getBackendQueryActor();
       if (!actor) throw new Error("Actor not ready");
       return actor.getConfig();
     },
@@ -62,7 +31,7 @@ export function useUserCollections(ownerAddress: string | null) {
     queryKey: ["userCollections", ownerAddress],
     queryFn: async () => {
       if (!ownerAddress) return [];
-      const actor = getActor();
+      const actor = getBackendQueryActor();
       if (!actor) return [];
       return actor.getUserCollections(ownerAddress);
     },
@@ -81,8 +50,7 @@ export function useCreateUserCollection() {
       data: UserCollectionInput;
       txSignature: string;
     }) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Actor not ready");
+      const actor = getBackendMutationActor();
       const result = await actor.createUserCollection(data, txSignature);
       if (result.__kind__ === "err") throw new Error(result.err);
       return result.ok;
@@ -105,8 +73,7 @@ export function useAddNftToUserCollection() {
       collectionId: string;
       nft: NftInput;
     }) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Actor not ready");
+      const actor = getBackendMutationActor();
       const result = await actor.addNftToUserCollection(collectionId, nft);
       if (result.__kind__ === "err") throw new Error(result.err);
       return result.ok;

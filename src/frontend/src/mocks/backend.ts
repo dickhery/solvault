@@ -150,10 +150,13 @@ export const mockBackend: backendInterface = {
   ],
 
   getConfig: async () => ({
+    thresholdKeyName: "dfx_test_key",
     collectionCreationFeeSOL: 0.5,
     solanaRpcUrl: "https://api.devnet.solana.com",
     network: "devnet",
     escrowWalletAddress: "EscrowXdvQxqY1SPUHrZsJ5mHDr3KAzYMgHGGLvUXC8h",
+    collectionPaymentAddress:
+      "CollectPayQxqY1SPUHrZsJ5mHDr3KAzYMgHGGLvUXC9i",
     platformFeePercent: 2.5,
   }),
 
@@ -201,7 +204,7 @@ export const mockBackend: backendInterface = {
     mintAddress: "mint001",
   }),
 
-  getSolanaBalance: async () => '{"jsonrpc":"2.0","result":{"context":{"slot":100},"value":5280000000},"id":1}',
+  getSolanaBalance: async () => "5280000000",
 
   getUser: async () => ({
     createdCollections: ["col-001"],

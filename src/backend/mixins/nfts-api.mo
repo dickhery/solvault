@@ -1,5 +1,6 @@
 import Map "mo:core/Map";
 import Runtime "mo:core/Runtime";
+import Text "mo:core/Text";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import NftTypes "../types/nfts";
 import CollectionTypes "../types/collections";

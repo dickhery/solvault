@@ -120,11 +120,15 @@ function AdminSetupGuide() {
   }
 
   const hasEscrow = Boolean(config?.escrowWalletAddress?.trim());
+  const hasCollectionPayment = Boolean(
+    config?.collectionPaymentAddress?.trim(),
+  );
   const isMainnet = config?.network === "mainnet-beta";
   const hasCollections = (collections?.length ?? 0) > 0;
   const hasFees =
     (config?.platformFeePercent ?? 0) > 0 ||
     (config?.collectionCreationFeeSOL ?? 0) > 0;
+  const hasThresholdKey = Boolean(config?.thresholdKeyName?.trim());
 
   const steps: SetupStep[] = [
     {
@@ -138,14 +142,24 @@ function AdminSetupGuide() {
     },
     {
       number: 2,
-      title: "Configure Escrow Wallet",
-      description: "Set the Solana address users will send their NFTs to.",
+      title: "Configure Collection Payment Wallet",
+      description:
+        "Set the Solana address users pay when creating collections.",
       detail:
-        "This must be a Solana wallet you fully control (e.g. a Phantom wallet you own). Users will deposit NFTs to this address when listing them on the marketplace. Enter it in App Configuration → Escrow Wallet Address below.",
-      isComplete: hasEscrow,
+        "This must be a Solana wallet you fully control. When a user creates a collection, Phantom will prompt them to send the configured SOL fee to this address before the collection is registered in SolVault.",
+      isComplete: hasCollectionPayment,
     },
     {
       number: 3,
+      title: "Configure Marketplace Escrow Wallet",
+      description:
+        "Set the address used for marketplace escrow and bid custody.",
+      detail:
+        "This is the Solana wallet users send listed NFTs and marketplace bid payments to. Keep a small SOL balance available here to cover outbound transaction fees when NFTs or SOL move back out.",
+      isComplete: hasEscrow,
+    },
+    {
+      number: 4,
       title: "Set Mainnet RPC URL",
       description: "Switch from devnet to a mainnet-beta RPC endpoint.",
       detail:
@@ -153,28 +167,30 @@ function AdminSetupGuide() {
       isComplete: isMainnet,
     },
     {
-      number: 4,
+      number: 5,
       title: "Register NFT Collections",
       description: "Add the collections users can deposit and trade.",
       detail:
-        'For each collection you need: the collection name, verified creator/collection address (mint address), and the metadata program address (usually the Metaplex Token Metadata program: metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s). Use the "Add Collection" button in the Registered Collections section below.',
+        'For each collection you need: the collection name, the collection mint address, and the metadata program address (usually the Metaplex Token Metadata program: metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s). Use the "Add Collection" button in the Registered Collections section below.',
       isComplete: hasCollections,
     },
     {
-      number: 5,
-      title: "Set Platform Fees",
-      description: "Configure the platform fee % and collection creation fee.",
+      number: 6,
+      title: "Set Fees and Threshold Key",
+      description:
+        "Configure pricing plus the chain-key name used for app vault addresses.",
       detail:
-        "Platform fee is taken from each marketplace sale (e.g. 2.5%). Collection creation fee is charged in SOL when users create their own NFT collections. Set these in App Configuration → Collection Creation Fee and Platform Fee below.",
-      isComplete: hasFees,
+        "Platform fee is taken from each marketplace sale (e.g. 2.5%). Collection creation fee is charged in SOL when users create their own NFT collections. Threshold key name controls which chain-key Ed25519 key the backend derives SOL and NFT vault addresses from.",
+      isComplete: hasFees && hasThresholdKey,
     },
     {
-      number: 6,
-      title: "Verify with NFT Lookup Tool",
+      number: 7,
+      title: "Verify with Collection Lookup Tool",
       description: "Test that your registered collections are working.",
       detail:
-        "Go to Settings and use the NFT Lookup tool. Paste a known NFT mint address from one of your registered collections — the app should confirm it belongs to a supported collection. This verifies your setup is complete.",
-      isComplete: hasCollections && isMainnet && hasEscrow,
+        "Go to Settings and use the collection lookup tool. Paste a registered collection mint address and confirm the app shows the correct per-user NFT vault address for deposits. This verifies your setup is complete.",
+      isComplete:
+        hasCollections && isMainnet && hasEscrow && hasCollectionPayment,
     },
   ];
 
@@ -296,12 +312,11 @@ function AdminSetupGuide() {
                     <span className="font-semibold text-foreground">
                       Address clarity tip:
                     </span>{" "}
-                    Users see two addresses in their Settings — their own
-                    Phantom wallet address (where they receive outgoing
-                    transfers), and the <strong>app's escrow address</strong>{" "}
-                    (where they send NFTs to deposit them). Make sure your
-                    escrow wallet is always funded with a small amount of SOL to
-                    cover transaction fees.
+                    Users now see three important addresses in Settings: their
+                    Phantom wallet, their app-specific SOL vault, and their
+                    app-specific NFT vault. Marketplace escrow and collection
+                    payment wallets stay admin-configured separately in this
+                    dashboard.
                   </p>
                 </div>
               </div>
@@ -648,10 +663,32 @@ function ConfigSection() {
 
             {/* Escrow Wallet */}
             <div className="space-y-1.5">
-              <Label htmlFor="cfg-escrow">Escrow Wallet Address</Label>
+              <Label htmlFor="cfg-collection-payment">
+                Collection Payment Wallet Address
+              </Label>
+              <Input
+                id="cfg-collection-payment"
+                placeholder="Solana wallet address for collection fee payments"
+                value={current?.collectionPaymentAddress ?? ""}
+                onChange={(e) =>
+                  setField("collectionPaymentAddress", e.target.value)
+                }
+                className="font-mono text-sm"
+                data-ocid="admin.config.collection_payment_wallet.input"
+              />
+              <p className="text-xs text-muted-foreground">
+                Users pay the collection creation fee to this Solana address
+                before their collection is created.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cfg-escrow">
+                Marketplace Escrow Wallet Address
+              </Label>
               <Input
                 id="cfg-escrow"
-                placeholder="Solana wallet address for escrow"
+                placeholder="Solana wallet address for marketplace escrow"
                 value={current?.escrowWalletAddress ?? ""}
                 onChange={(e) =>
                   setField("escrowWalletAddress", e.target.value)
@@ -660,8 +697,8 @@ function ConfigSection() {
                 data-ocid="admin.config.escrow_wallet.input"
               />
               <p className="text-xs text-muted-foreground">
-                This is the address users will send NFTs to when depositing.
-                Must be a Solana wallet you control.
+                This wallet receives marketplace escrowed NFTs and bid payments.
+                It should be a Solana wallet you control.
               </p>
             </div>
 
@@ -682,6 +719,22 @@ function ConfigSection() {
             </div>
 
             {/* Network */}
+            <div className="space-y-1.5">
+              <Label htmlFor="cfg-threshold-key">Threshold Key Name</Label>
+              <Input
+                id="cfg-threshold-key"
+                placeholder="dfx_test_key"
+                value={current?.thresholdKeyName ?? ""}
+                onChange={(e) => setField("thresholdKeyName", e.target.value)}
+                className="font-mono text-sm"
+                data-ocid="admin.config.threshold_key.input"
+              />
+              <p className="text-xs text-muted-foreground">
+                SolVault derives each user&apos;s SOL and NFT vault addresses
+                from this chain-key Ed25519 name.
+              </p>
+            </div>
+
             <div className="space-y-1.5">
               <Label>Network</Label>
               <Select

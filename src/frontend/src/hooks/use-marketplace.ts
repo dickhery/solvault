@@ -1,49 +1,18 @@
-import {
-  type AppConfig,
-  type Auction,
-  type AuctionFilter,
-  type AuctionStatus,
-  type Bid,
-  ExternalBlob,
-  type Listing,
-  type ListingFilter,
-  type ListingStatus__1,
-  createActor,
+import type {
+  AppConfig,
+  Auction,
+  AuctionFilter,
+  AuctionStatus,
+  Bid,
+  Listing,
+  ListingFilter,
+  ListingStatus__1,
 } from "@/backend";
+import {
+  getBackendMutationActor,
+  getBackendQueryActor,
+} from "@/lib/backend-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-// ─── Actor singleton ───────────────────────────────────────────────────────────
-
-declare const process: { env: Record<string, string | undefined> };
-
-function getActor() {
-  const canisterId =
-    (typeof process !== "undefined" && process.env.CANISTER_ID_BACKEND) || "";
-  if (!canisterId) return null;
-
-  const storageGatewayUrl =
-    (typeof process !== "undefined" && process.env.STORAGE_GATEWAY_URL) ||
-    "https://blob.caffeine.ai";
-
-  const uploadFile = async (blob: ExternalBlob): Promise<Uint8Array> => {
-    const bytes = await blob.getBytes();
-    const res = await fetch(`${storageGatewayUrl}/upload`, {
-      method: "POST",
-      body: bytes,
-    });
-    if (!res.ok) throw new Error("Upload failed");
-    return new Uint8Array(await res.arrayBuffer());
-  };
-
-  const downloadFile = async (hash: Uint8Array): Promise<ExternalBlob> => {
-    const hexHash = Array.from(hash)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return ExternalBlob.fromURL(`${storageGatewayUrl}/blob/${hexHash}`);
-  };
-
-  return createActor(canisterId, uploadFile, downloadFile);
-}
 
 // Re-export types for use in the page
 export type {
@@ -63,7 +32,7 @@ export function useListings(filter?: ListingFilter | null) {
   return useQuery<Listing[]>({
     queryKey: ["listings", filter],
     queryFn: async () => {
-      const actor = getActor();
+      const actor = getBackendQueryActor();
       if (!actor) return [];
       return actor.getListings(filter ?? null);
     },
@@ -89,8 +58,7 @@ export function useCreateListing() {
       priceSOL: number;
       durationDays: number;
     }) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
+      const actor = getBackendMutationActor();
       const result = await actor.createListing(
         mintAddress,
         priceSOL,
@@ -109,8 +77,7 @@ export function useCancelListing() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (listingId: string) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
+      const actor = getBackendMutationActor();
       const result = await actor.cancelListing(listingId);
       if (result.__kind__ === "err") throw new Error(result.err);
     },
@@ -132,8 +99,7 @@ export function useCompleteSale() {
       buyerAddress: string;
       txSignature: string;
     }) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
+      const actor = getBackendMutationActor();
       const result = await actor.completeSale(
         listingId,
         buyerAddress,
@@ -153,7 +119,7 @@ export function useAuctions(filter?: AuctionFilter | null) {
   return useQuery<Auction[]>({
     queryKey: ["auctions", filter],
     queryFn: async () => {
-      const actor = getActor();
+      const actor = getBackendQueryActor();
       if (!actor) return [];
       return actor.getAuctions(filter ?? null);
     },
@@ -170,7 +136,7 @@ export function useAuction(id: string) {
   return useQuery<Auction | null>({
     queryKey: ["auction", id],
     queryFn: async () => {
-      const actor = getActor();
+      const actor = getBackendQueryActor();
       if (!actor) return null;
       return actor.getAuction(id);
     },
@@ -197,8 +163,7 @@ export function usePlaceBid() {
       bidderAddress,
       txSignature,
     }) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
+      const actor = getBackendMutationActor();
       const result = await actor.placeBid(
         auctionId,
         bidAmountSOL,
@@ -227,8 +192,7 @@ export function useSettleAuction() {
       winnerAddress: string;
       paymentTxSignature: string;
     }) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
+      const actor = getBackendMutationActor();
       const result = await actor.settleAuction(
         auctionId,
         winnerAddress,
@@ -256,8 +220,7 @@ export function useCreateAuction() {
       reservePriceSOL: number;
       durationHours: number;
     }) => {
-      const actor = getActor();
-      if (!actor) throw new Error("Backend not available");
+      const actor = getBackendMutationActor();
       const result = await actor.createAuction(
         mintAddress,
         startPriceSOL,
@@ -279,7 +242,7 @@ export function useAppConfig() {
   return useQuery<AppConfig | null>({
     queryKey: ["appConfig"],
     queryFn: async () => {
-      const actor = getActor();
+      const actor = getBackendQueryActor();
       if (!actor) return null;
       return actor.getConfig();
     },

@@ -1,8 +1,10 @@
 import Map "mo:core/Map";
+import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import CollectionTypes "../types/collections";
 import CommonTypes "../types/common";
+import ConfigTypes "../types/config";
 import UserTypes "../types/users";
 import CollectionLib "../lib/collections";
 
@@ -13,6 +15,7 @@ mixin (
   users : Map.Map<Text, UserTypes.UserProfile>,
   collectionIdCounter : { var next : Nat },
   userCollectionIdCounter : { var next : Nat },
+  appConfig : { var value : ConfigTypes.AppConfig },
 ) {
   /// Admin: register an NFT collection (curated).
   public shared ({ caller }) func registerCollection(data : CollectionTypes.CollectionInput) : async Text {
@@ -49,7 +52,10 @@ mixin (
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Must be a registered user to create a collection");
     };
-    let feeSOL = 0.5;
+    if (appConfig.value.collectionPaymentAddress.size() == 0) {
+      Runtime.trap("Collection payment address is not configured");
+    };
+    let feeSOL = appConfig.value.collectionCreationFeeSOL;
     let ownerAddress = data.mintAuthority;
     CollectionLib.createUserCollection(userCollections, userCollectionIdCounter, data, ownerAddress, txSignature, feeSOL);
   };

@@ -32,7 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/activity", label: "Activity", icon: Activity, requiresAuth: true },
   {
     to: "/admin",
-    label: "Admin",
+    label: "Admin Dashboard",
     icon: ShieldCheck,
     adminOnly: true,
     requiresAuth: true,

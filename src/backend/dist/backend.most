@@ -2,10 +2,12 @@
 type AppConfig__1051343473 =
   {
     collectionCreationFeeSOL : Float;
+    collectionPaymentAddress : Text;
     escrowWalletAddress : Text;
     network : Text;
     platformFeePercent : Float;
-    solanaRpcUrl : Text
+    solanaRpcUrl : Text;
+    thresholdKeyName : Text
   };
 type AuctionId__693981461 = Text;
 type AuctionStatus__34015335 =
@@ -83,6 +85,10 @@ type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
 type Role__300349085 = {#admin; #guest; #user};
 type Role__717780527 = Role__300349085;
+type SchnorrAlgorithm__1060425748 = {#bip340secp256k1; #ed25519};
+type SchnorrAux__541075002 = {#bip341 : {merkle_root_hash : Blob}};
+type SchnorrKeyId__554953352 =
+  {algorithm : SchnorrAlgorithm__1060425748; name : Text};
 type Timestamp__301639476 = Int;
 type UserCollection__1049302503 =
   {
@@ -132,11 +138,30 @@ actor {
       var root : Node__46230540<Text, Listing__586492564>;
       var size : Nat__490723111
     };
+  stable management :
+    actor {
+      schnorr_public_key :
+        shared {
+                 canister_id : ?Principal;
+                 derivation_path : [Blob];
+                 key_id : SchnorrKeyId__554953352
+               } ->
+          async {chain_code : Blob; public_key : Blob};
+      sign_with_schnorr :
+        shared {
+                 aux : ?SchnorrAux__541075002;
+                 derivation_path : [Blob];
+                 key_id : SchnorrKeyId__554953352;
+                 message : Blob
+               } ->
+          async {signature : Blob}
+    };
   stable nfts :
     {
       var root : Node__46230540<Text, NftRecord__261687923>;
       var size : Nat__490723111
     };
+  stable schnorrCallCycles : Nat;
   stable userCollectionIdCounter : {var next : Nat};
   stable userCollections :
     {

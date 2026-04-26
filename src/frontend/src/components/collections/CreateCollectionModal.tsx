@@ -7,10 +7,17 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { usePhantom } from "@/contexts/phantom-context";
 import { useCreateUserCollection } from "@/hooks/use-collections";
-import { formatSol } from "@/lib/solana";
+import { getPhantomProvider } from "@/lib/phantom-provider";
+import { formatSol, getNetworkLabel } from "@/lib/solana";
 import { cn } from "@/lib/utils";
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import { CheckCircle2, ImagePlus, Loader2, Upload } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 type Step = 1 | 2 | 3 | "receipt";
@@ -28,7 +35,9 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   collectionCreationFeeSOL: number;
-  escrowWalletAddress: string;
+  collectionPaymentAddress: string;
+  solanaRpcUrl: string;
+  network: string;
 }
 
 function StepIndicator({ current }: { current: number }) {
@@ -83,7 +92,9 @@ export function CreateCollectionModal({
   open,
   onOpenChange,
   collectionCreationFeeSOL,
-  escrowWalletAddress,
+  collectionPaymentAddress,
+  solanaRpcUrl,
+  network,
 }: Props) {
   const { address } = usePhantom();
   const createMutation = useCreateUserCollection();
@@ -124,6 +135,18 @@ export function CreateCollectionModal({
     setUploadProgress(0);
     setReceipt(null);
   };
+
+  useEffect(() => {
+    if (!address) return;
+    setForm((prev) =>
+      prev.mintAuthority
+        ? prev
+        : {
+            ...prev,
+            mintAuthority: address,
+          },
+    );
+  }, [address]);
 
   const handleClose = (v: boolean) => {
     if (!v) resetModal();
@@ -174,64 +197,16 @@ export function CreateCollectionModal({
       );
       setIsUploading(false);
 
-      // Build SOL transfer transaction to escrow wallet
-      const solana = (
-        window as Window & {
-          solana?: {
-            publicKey: { toString: () => string };
-            signAndSendTransaction: (
-              tx: unknown,
-            ) => Promise<{ signature: string }>;
-          };
-        }
-      ).solana;
-
+      const solana = getPhantomProvider();
       if (!solana) throw new Error("Phantom not available");
-
-      // Build SystemProgram transfer tx using web3.js — types defined inline
-      interface SolanaWeb3 {
-        Connection: new (
-          url: string,
-          commitment: string,
-        ) => {
-          getLatestBlockhash: () => Promise<{ blockhash: string }>;
-          confirmTransaction: (
-            sig: string,
-            commitment: string,
-          ) => Promise<unknown>;
-        };
-        PublicKey: new (key: string) => unknown;
-        SystemProgram: {
-          transfer: (args: {
-            fromPubkey: unknown;
-            toPubkey: unknown;
-            lamports: number;
-          }) => unknown;
-        };
-        Transaction: new () => {
-          add: (...instructions: unknown[]) => {
-            recentBlockhash: string;
-            feePayer: unknown;
-          };
-          recentBlockhash: string;
-          feePayer: unknown;
-        };
+      if (!collectionPaymentAddress.trim()) {
+        throw new Error("Collection payment address is not configured yet");
       }
 
       const lamports = Math.round(collectionCreationFeeSOL * 1e9);
-      // @ts-ignore — dynamic ESM URL resolved at runtime by Vite/browser
-      const web3Module = await import(
-        /* @vite-ignore */ "https://esm.sh/@solana/web3.js@1.98.0" as string
-      );
-      const { Connection, PublicKey, SystemProgram, Transaction } =
-        web3Module as unknown as SolanaWeb3;
-
-      const connection = new Connection(
-        "https://api.devnet.solana.com",
-        "confirmed",
-      );
+      const connection = new Connection(solanaRpcUrl, "confirmed");
       const fromPubkey = new PublicKey(address);
-      const toPubkey = new PublicKey(escrowWalletAddress);
+      const toPubkey = new PublicKey(collectionPaymentAddress);
 
       const tx = new Transaction().add(
         SystemProgram.transfer({ fromPubkey, toPubkey, lamports }),
@@ -493,25 +468,34 @@ export function CreateCollectionModal({
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Network</span>
-                <span className="font-mono text-foreground">Solana Devnet</span>
+                <span className="font-mono text-foreground">
+                  Solana {getNetworkLabel(network)}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Recipient</span>
                 <span className="font-mono text-xs text-muted-foreground">
-                  {escrowWalletAddress.slice(0, 8)}…
-                  {escrowWalletAddress.slice(-6)}
+                  {collectionPaymentAddress
+                    ? `${collectionPaymentAddress.slice(0, 8)}…${collectionPaymentAddress.slice(-6)}`
+                    : "Not configured"}
                 </span>
               </div>
             </div>
           </div>
+          {!collectionPaymentAddress.trim() && (
+            <p className="text-xs text-destructive leading-relaxed">
+              The admin has not configured a collection payment wallet yet, so
+              collection creation is temporarily unavailable.
+            </p>
+          )}
           <p className="text-xs text-muted-foreground leading-relaxed">
             Clicking the button below will prompt Phantom to sign a SOL transfer
             of{" "}
             <strong className="text-foreground">
               {formatSol(collectionCreationFeeSOL, 2)} SOL
             </strong>{" "}
-            to our escrow wallet. The collection will be created immediately
-            after the transaction is confirmed.
+            to the admin-configured collection payment wallet. The collection
+            will be created immediately after the transaction is confirmed.
           </p>
           <div className="flex justify-between pt-1">
             <Button
@@ -524,7 +508,7 @@ export function CreateCollectionModal({
             </Button>
             <Button
               onClick={handlePayAndCreate}
-              disabled={isPaying}
+              disabled={isPaying || !collectionPaymentAddress.trim()}
               className="gap-2"
               data-ocid="create_collection.pay_create_button"
             >

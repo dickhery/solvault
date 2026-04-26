@@ -2,6 +2,7 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Iter "mo:core/Iter";
 import Time "mo:core/Time";
+import Text "mo:core/Text";
 import MarketTypes "../types/marketplace";
 import CommonTypes "../types/common";
 
@@ -21,7 +22,7 @@ module {
     durationDays : Nat,
     sellerAddress : Text,
   ) : Result<Listing> {
-    let id = idCounter.next.toText();
+    let id = debug_show (idCounter.next);
     idCounter.next += 1;
     let now = Time.now();
     // durationDays * 86_400 seconds * 1_000_000_000 ns
@@ -116,7 +117,7 @@ module {
     durationHours : Nat,
     sellerAddress : Text,
   ) : Result<Auction> {
-    let id = idCounter.next.toText();
+    let id = debug_show (idCounter.next);
     idCounter.next += 1;
     let now = Time.now();
     // durationHours * 3_600 seconds * 1_000_000_000 ns

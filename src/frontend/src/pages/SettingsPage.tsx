@@ -36,6 +36,7 @@ interface AddressCardProps {
   address: string | null | undefined;
   loading?: boolean;
   emptyMessage?: string;
+  badgeLabel?: string;
   variant: "user" | "deposit";
   ocid: string;
 }
@@ -46,6 +47,7 @@ function AddressCard({
   address,
   loading,
   emptyMessage,
+  badgeLabel,
   variant,
   ocid,
 }: AddressCardProps) {
@@ -80,12 +82,12 @@ function AddressCard({
           <p className="text-sm font-semibold text-foreground">{label}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
         </div>
-        {isDeposit && (
+        {isDeposit && badgeLabel && (
           <Badge
             variant="outline"
             className="border-accent/30 text-accent bg-accent/5 text-xs shrink-0"
           >
-            Escrow
+            {badgeLabel}
           </Badge>
         )}
       </div>
@@ -121,24 +123,24 @@ function AddressCard({
 
 type VerifyResult =
   | { status: "idle" }
-  | { status: "found"; collection: Collection; escrowAddress: string }
+  | { status: "found"; collection: Collection; depositAddress: string | null }
   | { status: "not_found" }
   | { status: "validation_error"; message: string };
 
 function NftVerifier() {
+  const { nftDepositAddress } = usePhantom();
   const { data: collections, isLoading: collectionsLoading } = useCollections();
-  const { data: config, isLoading: configLoading } = useAppConfig();
   const [mintInput, setMintInput] = useState("");
   const [result, setResult] = useState<VerifyResult>({ status: "idle" });
 
-  const isLoading = collectionsLoading || configLoading;
+  const isLoading = collectionsLoading;
 
   const handleCheck = () => {
     const trimmed = mintInput.trim();
     if (!trimmed) {
       setResult({
         status: "validation_error",
-        message: "Please paste an NFT mint address to check.",
+        message: "Please paste a collection mint address to check.",
       });
       return;
     }
@@ -161,7 +163,7 @@ function NftVerifier() {
       setResult({
         status: "found",
         collection: match,
-        escrowAddress: config?.escrowWalletAddress ?? "",
+        depositAddress: nftDepositAddress,
       });
     } else {
       setResult({ status: "not_found" });
@@ -179,11 +181,11 @@ function NftVerifier() {
         <Search className="w-5 h-5 text-primary" />
         <div>
           <h2 className="font-display font-semibold text-foreground leading-none">
-            Check NFT Before Sending
+            Check Collection Before Sending
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Paste an NFT mint address to verify it belongs to a supported
-            collection before depositing.
+            Paste a supported collection mint address before sending NFTs into
+            your SolVault NFT vault.
           </p>
         </div>
       </div>
@@ -199,7 +201,7 @@ function NftVerifier() {
         <>
           <div className="space-y-2">
             <Label className="text-sm text-foreground" htmlFor="nft-mint-input">
-              NFT Mint Address
+              Collection Mint Address
             </Label>
             <div className="flex gap-2">
               <Input
@@ -211,7 +213,7 @@ function NftVerifier() {
                     setResult({ status: "idle" });
                 }}
                 onKeyDown={(e) => e.key === "Enter" && handleCheck()}
-                placeholder="e.g. So1vAu1tNFTmintAddress..."
+                placeholder="e.g. So1vAu1tCollectionMintAddress..."
                 className="font-mono text-sm flex-1"
                 data-ocid="nft_verify.input"
                 aria-describedby={
@@ -264,8 +266,8 @@ function NftVerifier() {
                     Supported Collection
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    This NFT belongs to a registered collection and can be
-                    deposited into SolVault.
+                    NFTs from this collection can be deposited into your
+                    SolVault NFT vault.
                   </p>
                 </div>
               </div>
@@ -289,21 +291,28 @@ function NftVerifier() {
                     </span>
                   </div>
                 )}
-                {result.escrowAddress && (
+                {result.depositAddress ? (
                   <div className="rounded-md bg-muted/60 border border-border p-3 space-y-1.5">
                     <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                       <ArrowDownToLine className="w-3.5 h-3.5 text-primary" />
                       Send this NFT to:
                     </p>
                     <AddressChip
-                      address={result.escrowAddress}
+                      address={result.depositAddress}
                       full
                       className="w-full justify-between"
-                      data-ocid="nft_verify.escrow_address_chip"
+                      data-ocid="nft_verify.nft_vault_address_chip"
                     />
                     <p className="text-xs text-muted-foreground">
                       Copy this address and use it as the recipient in Phantom
                       to deposit the NFT into SolVault.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md bg-muted/60 border border-border p-3">
+                    <p className="text-xs text-muted-foreground">
+                      Connect Phantom to derive your personal NFT vault address
+                      before depositing.
                     </p>
                   </div>
                 )}
@@ -323,7 +332,7 @@ function NftVerifier() {
                   Not a Supported Collection
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  This NFT is not from a registered collection. Only NFTs from
+                  This collection mint is not registered. Only NFTs from
                   admin-approved collections can be deposited into SolVault.
                   Check the Collections page to see which collections are
                   supported.
@@ -340,7 +349,15 @@ function NftVerifier() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
-  const { address, role, isConnected, connect, disconnect } = usePhantom();
+  const {
+    address,
+    role,
+    isConnected,
+    connect,
+    disconnect,
+    solDepositAddress,
+    nftDepositAddress,
+  } = usePhantom();
   const { data: appConfig, isLoading: configLoading } = useAppConfig();
   const [notifications, setNotifications] = useState(true);
   const [networkWarning, setNetworkWarning] = useState(true);
@@ -408,20 +425,29 @@ export default function SettingsPage() {
             {/* Address cards */}
             <div className="space-y-3">
               <AddressCard
-                label="Your Wallet Address"
-                subtitle="Your connected Phantom wallet — receive transfers here"
+                label="Your Phantom Wallet Address"
+                subtitle="Your connected Phantom wallet for direct wallet-to-wallet transfers"
                 address={address}
                 variant="user"
                 ocid="settings.user_wallet_address"
               />
               <AddressCard
-                label="App Deposit Address"
-                subtitle="Send your NFTs to this address to deposit them into SolVault"
-                address={appConfig?.escrowWalletAddress}
-                loading={configLoading}
-                emptyMessage="Escrow address not configured yet — contact the admin."
+                label="App SOL Vault Address"
+                subtitle="Send SOL to this app-controlled address to fund your in-app balance"
+                address={solDepositAddress}
+                emptyMessage="Connect Phantom to derive your SOL vault address."
+                badgeLabel="SOL Vault"
                 variant="deposit"
-                ocid="settings.escrow_wallet_address"
+                ocid="settings.sol_vault_address"
+              />
+              <AddressCard
+                label="App NFT Vault Address"
+                subtitle="Send supported NFTs to this app-controlled address to deposit them into SolVault"
+                address={nftDepositAddress}
+                emptyMessage="Connect Phantom to derive your NFT vault address."
+                badgeLabel="NFT Vault"
+                variant="deposit"
+                ocid="settings.nft_vault_address"
               />
             </div>
 

@@ -1,4 +1,6 @@
 import Map "mo:core/Map";
+import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
@@ -10,14 +12,39 @@ import CollectionTypes "types/collections";
 import NftTypes "types/nfts";
 import MarketTypes "types/marketplace";
 import ConfigTypes "types/config";
+import WalletTypes "types/wallets";
 
 import MixinUsers "mixins/users-api";
 import MixinCollections "mixins/collections-api";
 import MixinNfts "mixins/nfts-api";
 import MixinMarketplace "mixins/marketplace-api";
 import MixinConfig "mixins/config-api";
+import UserLib "lib/users";
 
-actor {
+persistent actor {
+  type SchnorrAlgorithm = { #bip340secp256k1; #ed25519 };
+  type SchnorrKeyId = { algorithm : SchnorrAlgorithm; name : Text };
+  type SchnorrAux = { #bip341 : { merkle_root_hash : Blob } };
+
+  let management = actor ("aaaaa-aa") : actor {
+    schnorr_public_key : shared {
+      canister_id : ?Principal;
+      derivation_path : [Blob];
+      key_id : SchnorrKeyId;
+    } -> async {
+      public_key : Blob;
+      chain_code : Blob;
+    };
+    sign_with_schnorr : shared {
+      message : Blob;
+      derivation_path : [Blob];
+      key_id : SchnorrKeyId;
+      aux : ?SchnorrAux;
+    } -> async { signature : Blob };
+  };
+
+  let schnorrCallCycles : Nat = 25_000_000_000;
+
   // ── Extension infrastructure ─────────────────────────────────
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -48,8 +75,10 @@ actor {
       collectionCreationFeeSOL = 0.5;
       platformFeePercent = 2.5;
       escrowWalletAddress = "";
+      collectionPaymentAddress = "";
       solanaRpcUrl = "https://api.devnet.solana.com";
       network = "devnet";
+      thresholdKeyName = "dfx_test_key";
     };
   };
 
@@ -63,6 +92,7 @@ actor {
     users,
     collectionIdCounter,
     userCollectionIdCounter,
+    appConfig,
   );
 
   include MixinNfts(
@@ -81,6 +111,78 @@ actor {
   );
 
   include MixinConfig(accessControlState, appConfig);
+
+  func requireAuthenticated(caller : Principal) {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Anonymous callers are not allowed");
+    };
+  };
+
+  func schnorrKeyId() : SchnorrKeyId {
+    {
+      algorithm = #ed25519;
+      name = appConfig.value.thresholdKeyName;
+    };
+  };
+
+  func vaultDerivationPath(caller : Principal, vaultKind : WalletTypes.VaultKind) : [Blob] {
+    let vaultSegment = switch (vaultKind) {
+      case (#sol) { "sol".encodeUtf8() };
+      case (#nft) { "nft".encodeUtf8() };
+    };
+    [
+      "solvault".encodeUtf8(),
+      caller.toBlob(),
+      vaultSegment,
+    ];
+  };
+
+  func getVaultPublicKey(caller : Principal, vaultKind : WalletTypes.VaultKind) : async Blob {
+    let { public_key } = await (with cycles = schnorrCallCycles) management.schnorr_public_key({
+      canister_id = null;
+      derivation_path = vaultDerivationPath(caller, vaultKind);
+      key_id = schnorrKeyId();
+    });
+    public_key;
+  };
+
+  /// Register the connected Phantom wallet if needed and return the current
+  /// app session details, including the app-controlled deposit public keys.
+  public shared ({ caller }) func loginWithPhantom(solanaAddress : Text) : async WalletTypes.WalletSession {
+    requireAuthenticated(caller);
+    if (solanaAddress.size() == 0) {
+      Runtime.trap("solanaAddress must not be empty");
+    };
+
+    let role = switch (users.get(solanaAddress)) {
+      case (?existing) { existing.role };
+      case null { UserLib.registerUser(users, accessControlState, solanaAddress, caller) };
+    };
+
+    let solDepositPublicKey = await getVaultPublicKey(caller, #sol);
+    let nftDepositPublicKey = await getVaultPublicKey(caller, #nft);
+
+    {
+      solanaAddress;
+      role;
+      solDepositPublicKey;
+      nftDepositPublicKey;
+      config = appConfig.value;
+    };
+  };
+
+  /// Sign an arbitrary message with the caller's derived vault key. This is the
+  /// foundation needed for Solana withdrawals from app-controlled vaults.
+  public shared ({ caller }) func signWithVault(vaultKind : WalletTypes.VaultKind, message : Blob) : async Blob {
+    requireAuthenticated(caller);
+    let { signature } = await (with cycles = schnorrCallCycles) management.sign_with_schnorr({
+      message;
+      derivation_path = vaultDerivationPath(caller, vaultKind);
+      key_id = schnorrKeyId();
+      aux = null;
+    });
+    signature;
+  };
 
   // ── Solana RPC HTTP Outcalls ──────────────────────────────────
 

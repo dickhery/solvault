@@ -55,10 +55,12 @@ export interface Bid {
     bidder: string;
 }
 export interface AppConfig {
+    thresholdKeyName: string;
     collectionCreationFeeSOL: number;
     solanaRpcUrl: string;
     network: string;
     escrowWalletAddress: string;
+    collectionPaymentAddress: string;
     platformFeePercent: number;
 }
 export type Result_5 = {

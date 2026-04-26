@@ -1,47 +1,8 @@
-import {
-  ExternalBlob,
-  type NftRecord,
-  type UserCollection,
-  createActor,
-} from "@/backend";
+import type { NftRecord, UserCollection } from "@/backend";
 import type { NftCardData, NftStatus } from "@/components/ui/NftCard";
+import { getBackendQueryActor } from "@/lib/backend-client";
 import { lamportsToSol } from "@/lib/solana";
 import { useQuery } from "@tanstack/react-query";
-
-// ---------------------------------------------------------------------------
-// Actor singleton (anonymous — Phantom wallet handles Solana auth separately)
-// ---------------------------------------------------------------------------
-
-declare const process: { env: Record<string, string | undefined> };
-
-function getActor() {
-  const canisterId =
-    (typeof process !== "undefined" && process.env.CANISTER_ID_BACKEND) || "";
-  if (!canisterId) return null;
-
-  const storageGatewayUrl =
-    (typeof process !== "undefined" && process.env.STORAGE_GATEWAY_URL) ||
-    "https://blob.caffeine.ai";
-
-  const uploadFile = async (blob: ExternalBlob): Promise<Uint8Array> => {
-    const bytes = await blob.getBytes();
-    const res = await fetch(`${storageGatewayUrl}/upload`, {
-      method: "POST",
-      body: bytes,
-    });
-    if (!res.ok) throw new Error("Upload failed");
-    return new Uint8Array(await res.arrayBuffer());
-  };
-
-  const downloadFile = async (hash: Uint8Array): Promise<ExternalBlob> => {
-    const hexHash = Array.from(hash)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return ExternalBlob.fromURL(`${storageGatewayUrl}/blob/${hexHash}`);
-  };
-
-  return createActor(canisterId, uploadFile, downloadFile);
-}
 
 // ---------------------------------------------------------------------------
 // Type helpers
@@ -85,7 +46,7 @@ export function useUserNfts(ownerAddress: string | null) {
     queryKey: ["user-nfts", ownerAddress],
     queryFn: async () => {
       if (!ownerAddress) return [];
-      const actor = getActor();
+      const actor = getBackendQueryActor();
       if (!actor) return [];
       const records = await actor.getUserNfts(ownerAddress);
       return records.map(nftRecordToCardData);
@@ -100,7 +61,7 @@ export function useSolanaBalance(address: string | null) {
     queryKey: ["solana-balance", address],
     queryFn: async () => {
       if (!address) return 0;
-      const actor = getActor();
+      const actor = getBackendQueryActor();
       if (!actor) return 0;
       // Backend returns lamports as a string
       const lamportsStr = await actor.getSolanaBalance(address);
@@ -118,7 +79,7 @@ export function useUserCollections(ownerAddress: string | null) {
     queryKey: ["user-collections", ownerAddress],
     queryFn: async () => {
       if (!ownerAddress) return [];
-      const actor = getActor();
+      const actor = getBackendQueryActor();
       if (!actor) return [];
       return actor.getUserCollections(ownerAddress);
     },

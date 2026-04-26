@@ -2,6 +2,7 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Iter "mo:core/Iter";
 import Time "mo:core/Time";
+import Text "mo:core/Text";
 import NftTypes "../types/nfts";
 import CollectionTypes "../types/collections";
 import CommonTypes "../types/common";

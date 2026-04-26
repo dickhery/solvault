@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePhantom } from "@/contexts/phantom-context";
-import { truncateAddress } from "@/lib/solana";
+import { useAppConfig } from "@/hooks/use-admin";
+import { getNetworkLabel, truncateAddress } from "@/lib/solana";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, Copy, Loader2, LogOut, Menu, Shield } from "lucide-react";
@@ -15,7 +16,9 @@ interface HeaderProps {
 export function Header({ onMenuClick }: HeaderProps) {
   const { address, role, isConnecting, isConnected, connect, disconnect } =
     usePhantom();
+  const { data: appConfig } = useAppConfig();
   const [menuOpen, setMenuOpen] = useState(false);
+  const networkLabel = getNetworkLabel(appConfig?.network ?? "devnet");
 
   const copyAddress = () => {
     if (!address) return;
@@ -45,7 +48,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 border-accent/30 bg-accent/5 text-accent text-xs font-mono"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          Devnet
+          {networkLabel}
         </Badge>
       </div>
 
@@ -59,7 +62,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               className="hidden sm:flex gap-1.5 text-primary border border-primary/20 hover:bg-primary/10"
             >
               <Shield className="w-3.5 h-3.5" />
-              Admin
+              Admin Dashboard
             </Button>
           </Link>
         )}
@@ -135,7 +138,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      disconnect();
+                      void disconnect();
                       setMenuOpen(false);
                     }}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors rounded-b-lg"
