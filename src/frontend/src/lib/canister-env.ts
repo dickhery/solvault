@@ -15,6 +15,8 @@ type IcEnvCookie = {
 };
 
 const parsedRuntimeEnv = runtimeEnv as RuntimeEnv;
+let deployedRuntimeEnv: RuntimeEnv | null = null;
+let runtimeEnvLoadPromise: Promise<void> | null = null;
 
 function normalizeString(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -31,6 +33,58 @@ function getBuildTimeEnv(key: string): string | null {
   }
 
   return normalizeString(process.env[key]);
+}
+
+function getBaseUrl(): string {
+  if (typeof import.meta === "undefined") {
+    return "/";
+  }
+
+  return import.meta.env?.BASE_URL ?? "/";
+}
+
+function getRuntimeEnvUrl(): string | null {
+  if (typeof window === "undefined") return null;
+
+  const baseUrl = getBaseUrl();
+  return new URL(`${baseUrl}env.json`, window.location.origin).toString();
+}
+
+async function fetchDeployedRuntimeEnv(): Promise<RuntimeEnv | null> {
+  const runtimeEnvUrl = getRuntimeEnvUrl();
+  if (!runtimeEnvUrl) return null;
+
+  try {
+    const response = await fetch(runtimeEnvUrl, {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+    if (!response.ok) return null;
+
+    const json = (await response.json()) as RuntimeEnv;
+    return json;
+  } catch {
+    return null;
+  }
+}
+
+function getEffectiveRuntimeEnv(): RuntimeEnv {
+  return {
+    ...parsedRuntimeEnv,
+    ...deployedRuntimeEnv,
+  };
+}
+
+export async function initializeCanisterEnv(): Promise<void> {
+  if (runtimeEnvLoadPromise) {
+    return runtimeEnvLoadPromise;
+  }
+
+  runtimeEnvLoadPromise = (async () => {
+    deployedRuntimeEnv = await fetchDeployedRuntimeEnv();
+  })();
+
+  return runtimeEnvLoadPromise;
 }
 
 function decodeHex(value: string): Uint8Array | null {
@@ -117,8 +171,10 @@ function parseIcEnvCookie(): IcEnvCookie | null {
 
 export function getBackendCanisterId(): string | null {
   const icEnv = parseIcEnvCookie();
+  const runtimeEnv = getEffectiveRuntimeEnv();
   return (
     normalizeString(icEnv?.canisterIds.backend) ??
+    normalizeString(runtimeEnv.backend_canister_id) ??
     getBuildTimeEnv("CANISTER_ID_BACKEND") ??
     normalizeString(parsedRuntimeEnv.backend_canister_id)
   );
@@ -126,12 +182,13 @@ export function getBackendCanisterId(): string | null {
 
 export function getBackendHost(): string | null {
   const icEnv = parseIcEnvCookie();
+  const runtimeEnv = getEffectiveRuntimeEnv();
   if (icEnv && typeof window !== "undefined") {
     return window.location.origin;
   }
 
   return (
-    normalizeString(parsedRuntimeEnv.backend_host) ??
+    normalizeString(runtimeEnv.backend_host) ??
     (typeof window !== "undefined" ? window.location.origin : null)
   );
 }
