@@ -6,7 +6,6 @@ src/frontend/node_modules/
 # Build outputs
 src/frontend/dist/
 src/backend/dist/*.wasm
-src/backend/dist/*.most
 .dfx/
 .icp/cache/
 
