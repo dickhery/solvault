@@ -1,0 +1,26 @@
+{
+  "overview": "SolVault is the go-to Solana NFT app on ICP — connect your Phantom wallet to hold, mint, and sell SOL NFTs. Browse your portfolio, create collections, mint new NFTs, and trade on the built-in marketplace with fixed-price listings and timed auctions.",
+  "features": [
+    "Phantom wallet authentication with automatic admin detection",
+    "NFT portfolio viewer with SOL balance and collection stats",
+    "Admin dashboard for curating official NFT collections",
+    "User NFT collection creation with SOL fee payment",
+    "NFT minting with image upload and Metaplex metadata",
+    "Fixed-price marketplace listings with secure NFT escrow",
+    "Timed auction system with real-time bidding and countdown",
+    "Solana Devnet integration via HTTP outcalls"
+  ],
+  "category": "nft-web3",
+  "tags": [
+    "solana",
+    "nft",
+    "phantom",
+    "wallet",
+    "marketplace",
+    "minting",
+    "auctions",
+    "web3",
+    "icp"
+  ],
+  "last_updated": "2026-04-26T13:48:37.211Z"
+}
